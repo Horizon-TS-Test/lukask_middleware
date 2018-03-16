@@ -100,3 +100,6 @@ ENV/
 
 *.sqlite3
 .vagrant
+
+# no  se da seguimiento a los paquetes de node-modules
+src/lukask_middleware/node_modules
