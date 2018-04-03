@@ -103,3 +103,9 @@ ENV/
 
 # no  se da seguimiento a los paquetes de node-modules
 src/lukask_middleware/node_modules
+
+#omitimos proyecto de repaso de lukask_middleware
+src/repaso_midd
+
+#omitimos la configuracion del archivo de la maquina virtual de vagrant
+Vagrantfile
