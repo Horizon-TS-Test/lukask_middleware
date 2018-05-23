@@ -1,14 +1,19 @@
 var express = require('express');
 
-////////USED TO STORE SESSION INSIDE REDIS SERVER:////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * ////////USED TO STORE SESSION INSIDE REDIS SERVER:////////
+ */
 var redis = require('redis');
 var session = require('express-session');
 var redisStore = require('connect-redis')(session);
 
 var redisAuth = require('./config/redis_auth');
-//////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var servers = require("./config/websocket-servers");
+var servers = require("./config/servers");
 
 var secret_dir = require('./config/secret');
 var backend_cred = require('./config/credentials');
@@ -23,32 +28,44 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
-///////////////////////////ROUTES://///////////////////////
-//var index = require('./routes/index');
-//var users = require('./routes/users');
-var restcli = require('./routes/restapi-client');
-var todocli = require('./routes/todos');
-var logincli = require('./routes/login');
-var logoutcli = require('./routes/logout');
-///////////////////////////////////////////////////////////
 
-/////////////////////CRYPTO GENERATOR//////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * ///////////////////////////ROUTES://///////////////////////
+ */
+var qtypeRoute = require('./routes/qtype');
+var publicationsRoute = require('./routes/publications');
+var loginRoute = require('./routes/login');
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * /////////////////////CRYPTO GENERATOR//////////////////////
+ */
 var cryptoGen = require('./tools/crypto-generator');
-///////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-////////USED TO STORE SESSION INSIDE REDIS SERVER://///////
-var redisClient = redis.createClient({host: redisAuth.host, port: redisAuth.port, password: redisAuth.password});
-///////////////////////////////////////////////////////////
+/**
+ * ////////USED TO STORE SESSION INSIDE REDIS SERVER://///////
+ */
+var redisClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 var app = express();
 var server = require("http").Server(app);
 var io = require("socket.io")(server);
 
-// view engine setup
 app.set('views', path.join(__dirname, 'views'));
-//app.set('view engine', 'pug');
 app.set('view engine', 'hbs');
 
-////////USED TO STORE SESSION INSIDE REDIS SERVER:////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * ////////USED TO STORE SESSION INSIDE REDIS SERVER:////////
+ */
 var sessionMiddleware = session({
   secret: secret_dir.secret_key,
   //NEXT CREATES A NEW REDIS STORE:
@@ -65,7 +82,8 @@ var sessionMiddleware = session({
   resave: false
 });
 app.use(sessionMiddleware);
-//////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
@@ -77,12 +95,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'node_modules')));
 
 
-//////////////////////////////////////// ENABLE CORS: ////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * //////////////////////////////////////// ENABLE CORS: ////////////////////////////////////////////
+ */
 //TO ENSURE OUR FRONT END CLIENT COULD REACH THIS MIDDLEWARE SERVER:
 app.use(function (req, res, next) {
   res.setHeader('Access-Control-Allow-Origin', servers.allow_origin);
   //res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, Content-Length, X-Requested-With, Content-Type, Accept, X-Access-Token');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, Content-Length, X-Requested-With, Content-Type, Accept, X-Access-Token, Pass-Key');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, DELETE, OPTIONS, PATCH');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
@@ -94,63 +115,133 @@ app.use(function (req, res, next) {
     next();
   }
 });
-//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//MIDDLEWARE METHOD USED TO ENSURE USERS MUST BE LOGGED FIRST:
 
-var midGetClient = redis.createClient({host: redisAuth.host, port: redisAuth.port, password: redisAuth.password});
-var midSetClient = redis.createClient({host: redisAuth.host, port: redisAuth.port, password: redisAuth.password});
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * //MIDDLEWARE METHOD USED TO ENSURE USERS MUST BE LOGGED FIRST:
+ */
+
+var midGetClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
+var midSetClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
 app.use(function (req, res, next) {
   //REF: https://stackoverflow.com/questions/12525928/how-to-get-request-path-with-express-req-object
   if (req.originalUrl.indexOf('login') === -1 && req.originalUrl.indexOf('logout') === -1) {
     console.log("Express sessions controling middleware");
 
-    if (!req.session.key) {
-      return res.status(401).json({
-        code: 401,
-        title: "Not Authenticated",
-        data: "You must be logged first."
-      });
-    }
+    let workerOrigin = req.headers['pass-key'];
+    if (workerOrigin) {
+      //IF THE SERVICE WORKER SENDS A BACKGROUND SYNC REQUEST:
+      let listPromise = new Promise((resolve, reject) => {
+        redisClient.keys("sess:*", function (error, keys) {
+          if (keys.length == 0) {
+            reject(false);
+          }
+          for (let i = 0; i < keys.length; i++) {
+            let getPromise = new Promise((resolve, reject) => {
+              midGetClient.get(keys[i], function (err, reply) {
+                let keyData = JSON.parse(reply);
+                if (keyData.key) {
+                  if (keyData.key.crypto_user_id == workerOrigin) {
+                    req.session["key"] = {
+                      token: keyData.key.token
+                    }
+                    resolve(true);
+                  }
+                  else if (i + 1 == keys.length) {
+                    reject(false);
+                  }
+                }
+                else if (i + 1 == keys.length) {
+                  reject(false);
+                }
+              });
+            });
 
-    let localEncrypted = req.session.key.crypto_user_id;
-    //let userEncrypted = req.query.userId;
-    //REF: https://scotch.io/tutorials/authenticate-a-node-js-api-with-json-web-tokens
-    let userEncrypted = req.headers['x-access-token'];
-
-    console.log("userEncrypted", cryptoGen.decrypt(userEncrypted));
-    console.log("localEncrypted", cryptoGen.decrypt(localEncrypted));
-
-    if (!(localEncrypted.content === userEncrypted.content && cryptoGen.decrypt(localEncrypted) === cryptoGen.decrypt(userEncrypted))) {
-      return res.status(401).json({
-        title: "Not Authorized",
-        data: "Invalid user credentials"
-      });
-    }
-
-    //REDIS SESSION TTL RESTARTING:
-    redisClient.keys("sess:*", function (error, keys) {
-      for (let key of keys) {
-        midGetClient.get(key, function (err, reply) {
-          let keyData = JSON.parse(reply);
-          if (keyData.key) {
-            if (keyData.key.crypto_user_id == req.session.key.crypto_user_id) {
-              //REF: https://dzone.com/articles/tutorial-working-nodejs-and
-              midSetClient.expire(key, def_exp_time);
-              midSetClient.expire(aux_prefij + key, exp_time);
-            }
+            getPromise.then((isEqual) => {
+              if (isEqual) {
+                resolve(true);
+              }
+            }).catch((err) => {
+              console.log("none");
+            });
           }
         });
+      });
+
+      listPromise.then((isThereToken) => {
+        if (isThereToken) {
+          next();
+        }
+      }).catch((err) => {
+        return res.status(401).json({
+          code: 401,
+          title: "Not Authorized",
+          data: "Invalid user credentials"
+        });
+      });
+
+      ////
+    }
+    else {
+      if (!req.session.key) {
+        return res.status(401).json({
+          code: 401,
+          title: "Not Authenticated",
+          data: "You must be logged first."
+        });
       }
-    });
-    ////
+
+      let localEncrypted = req.session.key.crypto_user_id;
+      //let userEncrypted = req.query.userId;
+      //REF: https://scotch.io/tutorials/authenticate-a-node-js-api-with-json-web-tokens
+      let userEncrypted = req.headers['x-access-token'];
+
+      console.log("userEncrypted", cryptoGen.decrypt(userEncrypted));
+      console.log("localEncrypted", cryptoGen.decrypt(localEncrypted));
+
+      if (!(localEncrypted.content === userEncrypted.content && cryptoGen.decrypt(localEncrypted) === cryptoGen.decrypt(userEncrypted))) {
+        return res.status(401).json({
+          code: 401,
+          title: "Not Authorized",
+          data: "Invalid user credentials"
+        });
+      }
+
+      //REDIS SESSION TTL RESTARTING:
+      /*redisClient.keys("sess:*", function (error, keys) {
+        for (let key of keys) {
+          midGetClient.get(key, function (err, reply) {
+            let keyData = JSON.parse(reply);
+            if (keyData.key) {
+              if (keyData.key.crypto_user_id == req.session.key.crypto_user_id) {
+                //REF: https://dzone.com/articles/tutorial-working-nodejs-and
+                midSetClient.expire(key, def_exp_time);
+                midSetClient.expire(aux_prefij + key, exp_time);
+              }
+            }
+          });
+        }
+      });*/
+      ////
+      next();
+    }
   }
-
-  next();
+  else {
+    next();
+  }
 });
-////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//SOCKET.IO MIDDLEWARE TO LINK EXPRESS STATUS AND SESSION WITH SOCKET.IO STATUS:
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * //SOCKET.IO MIDDLEWARE TO LINK EXPRESS STATUS AND SESSION WITH SOCKET.IO STATUS:
+ */
 io.use(function (socket, next) {
   sessionMiddleware(socket.request, {}, next);
 });
@@ -173,14 +264,13 @@ io.use(function (socket, next) {
 
   next();
 });
-////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//app.use('/', index);
-//app.use('/users', users);
-app.use('/logout', logoutcli);
-app.use('/restcli', restcli);
-app.use('/todos', todocli);
-app.use('/login', logincli);
+
+app.use('/qtype', qtypeRoute);
+app.use('/publication', publicationsRoute);
+app.use('/login', loginRoute);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -201,10 +291,13 @@ app.use(function (err, req, res, next) {
 });
 
 
-//////////////////////////////////////////////REDIS PUB/SUB////////////////////////////////////////////
-var pubsubClient = redis.createClient({host: redisAuth.host, port: redisAuth.port, password: redisAuth.password});
-var settingClient = redis.createClient({host: redisAuth.host, port: redisAuth.port, password: redisAuth.password});
-var gettingClient = redis.createClient({host: redisAuth.host, port: redisAuth.port, password: redisAuth.password});
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * //////////////////////////////////////////////REDIS PUB/SUB////////////////////////////////////////////
+ */
+var pubsubClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
+var settingClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
+var gettingClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
 
 var EVENT_SET = '__keyevent@0__:set';
 var EVENT_DEL = '__keyevent@0__:del';
@@ -220,17 +313,17 @@ pubsubClient.config("SET", "notify-keyspace-events", "KEA");
 pubsubClient.on('message', function (channel, key) {
   switch (channel) {
     case EVENT_SET:
-      if (key.indexOf(aux_prefij) == -1) {
+      /*if (key.indexOf(aux_prefij) == -1) { --> TEMPORARY COMMENTED
         //REF: https://github.com/NodeRedis/node_redis/issues/1000
-        settingClient.set(aux_prefij + key, '', 'EX', exp_time);
+        //settingClient.set(aux_prefij + key, '', 'EX', exp_time);
       }
-      console.log('Key "' + key + '" set!');
+      console.log('Key "' + key + '" set!');*/
       break;
     case EVENT_DEL:
-      console.log('Key "' + key + '" deleted!');
+      /*console.log('Key "' + key + '" deleted!');
       if (key.indexOf(aux_prefij) === -1) {
         settingClient.del(aux_prefij + key);
-      }
+      }*/
       break;
     case EVENT_EXPIRED:
       console.log('Key "' + key + '" expired!');
@@ -267,9 +360,15 @@ pubsubClient.on('message', function (channel, key) {
 });
 
 pubsubClient.subscribe(EVENT_SET, EVENT_DEL, EVENT_EXPIRED);
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////USING SOCKET.IO//////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * //////////////////////////////////////////////////////USING SOCKET.IO//////////////////////////////////////////////
+ */
 io.on("connection", function (socket) {
   if (socket.force_logout) {
     socket.emit('force_logout', 'You has been kicked from the server. Echo from server.');
@@ -277,107 +376,34 @@ io.on("connection", function (socket) {
     socket.disconnect();
   }
 
-  //IMPLEMENTATION TO SAVE SOCKET CLIENTS ON AN ARRAY (DEPRECATED):
-  /*socket.on("auth", function (data) {
-    let localEncrypted = socket.request.session.key.crypto_user_id;
-    //REF: https://stackoverflow.com/questions/25083564/socket-io-parameters-on-connection
-    //let socketEncrypted = socket.handshake.query._;
-    let socketEncrypted = data.user_id;
-
-    console.log("socketEncrypted", cryptoGen.decrypt(socketEncrypted));
-    console.log("localEncrypted", cryptoGen.decrypt(localEncrypted));
-
-    if (!(localEncrypted.content === socketEncrypted.content && cryptoGen.decrypt(localEncrypted) === cryptoGen.decrypt(socketEncrypted))) {
-      console.log("Invalid user credentials... forcing logout socket with ID: ", socket.id);
-      socket.emit('force_logout', 'You has been kicked from the server. Echo from server.');
-      socket.disconnect();
-    }
-    else {
-      console.log("User has logged in, Socket ID: ", socket.id);
-      socket.auth = true;
-    }
-  });
-
-  //TO ENSURE CLIENT HAS NOT AUTHENTICATED:
-  setTimeout(function() {
-    if (socket.auth == false) {
-      console.log("User has never authenticated... forcing disconnect socket with ID: ", socket.id);
-      socket.disconnect();
-    }
-  }, 1000);*/
-  ////
-
-  /*socket.on("notification", function (data) {
-    //client.emit("server-rules", data);
-    client.broadcast.emit("server-rules", data);
-  });*/
-
   socket.on("disconnect", function (data) {
     console.log("Socket has been disconnected: ", data);
   });
 });
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//SOCKET WITH EXPRESS GENERATOR:
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * //SOCKET WITH EXPRESS GENERATOR:
+ */
 //REF: https://medium.com/@suhas_chitade/express-generator-with-socket-io-80464341e8ba
 //TO SHARE SOCKET INSTANCE TO EXPRESS ROUTES:
 app.use(function (req, res, next) {
   req.io = io;
   next();
 });
-////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//////////USING WEBSOCKET CLIENT OF PYTHON CONNECTION//////////
 
-/*var WebSocketClient = require("websocket").w3cwebsocket;
 
-var webSocketClient = new WebSocketClient("ws://10.0.2.2:8080/api/", "echo-protocol", "http://10.0.2.2:8080");
-
-webSocketClient.onerror = function(error) {
-  console.log("Channels APi Websocket Connection Error", error);
-};
-
-webSocketClient.onopen = function() {
-  console.log("Channels APi Websocket Client connected");
-
-  //SUBSCRIPTION:
-  var msg = {
-    stream: "todos",
-    payload: {
-      action: "subscribe",
-      data: {
-        action: "update"
-      }
-    }
-  };
-
-  webSocketClient.send(JSON.stringify(msg));
-    
-  msg = {
-    stream: "todos",
-    payload: {
-      action: "subscribe",
-      data: {
-        action: "delete"
-      }
-    }
-  }
-
-  webSocketClient.send(JSON.stringify(msg));
-  ////
-};
-
-webSocketClient.onclose = function() {
-  console.log("Channels APi Websocket echo-protocol Client Closed");
-};
-
-webSocketClient.onmessage = function(e) {
-  console.log("Channels APi Websocket data received: '" + e.data + "'");
-
-  //REF: https://stackoverflow.com/questions/8281382/socket-send-outside-of-io-sockets-on
-  io .sockets.emit("broad", "Channels APi Websocket data received: '" + e.data + "'");
-};*/
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * //////////USING WEBSOCKET CLIENT OF PYTHON CONNECTION//////////
+ */
 var WebSocketClient = require('websocket').client;
 
 var client = new WebSocketClient();
@@ -395,7 +421,7 @@ client.on('connect', function (connection) {
 
   //SUBSCRIPTION:
   var msg = {
-    stream: "todos",    
+    stream: "publication",
     payload: {
       action: "subscribe",
       data: {
@@ -407,7 +433,7 @@ client.on('connect', function (connection) {
   connection.send(JSON.stringify(msg));
 
   var msg = {
-    stream: "todos",
+    stream: "publication",
     payload: {
       action: "subscribe",
       data: {
@@ -419,7 +445,7 @@ client.on('connect', function (connection) {
   connection.send(JSON.stringify(msg));
 
   msg = {
-    stream: "todos",
+    stream: "publication",
     payload: {
       action: "subscribe",
       data: {
@@ -452,34 +478,16 @@ client.on('connect', function (connection) {
   });
 });
 
-client.connect('ws://' + servers.backend_websocket + '/api', "", "http://" + servers.tornado_websocket);
+client.connect('ws://' + servers.backend_websocket + '/lukask-api', "", "http://" + servers.backend_websocket);
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-///////////////////////////////////////////////////////////////
 
-////////////////////////////CLIENT FROM PYTHON'S TORNADO WEBSOCKET/////////////////////
-/*var WebSocketClient = require("websocket").w3cwebsocket;
 
-var TornadoWebSocketClient = new WebSocketClient("ws://10.0.2.2:9432/ws/ws_pubsub", "echo-protocol", "http://10.0.2.2:9432");
-
-TornadoWebSocketClient.onerror = function() {
-  console.log("Tornado Websocket Connection Error");
-};
-
-TornadoWebSocketClient.onopen = function() {
-  console.log("Tornado Websocket Client connected");
-};
-
-TornadoWebSocketClient.onclose = function() {
-  console.log("Tornado Websocket echo-protocol Client Closed");
-};
-
-TornadoWebSocketClient.onmessage = function(e) {
-  console.log("Tornado Websocket data received: '" + e.data + "'");
-
-  //REF: https://stackoverflow.com/questions/8281382/socket-send-outside-of-io-sockets-on
-  io.sockets.emit("broad", "Tornado Websocket data received: '" + e.data + "'");
-};*/
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * ////////////////////////////CLIENT FROM PYTHON'S TORNADO WEBSOCKET/////////////////////
+ */
 var WebSocketClient = require('websocket').client;
 
 var client = new WebSocketClient();
@@ -496,9 +504,9 @@ client.on('connect', function (connection) {
   });
 
   // TORNADO WEBSOCKET AUTHENTICTION PROCESS:
-  connection.send(JSON.stringify({ event: "middle_auth", data: { token: backend_cred.backend_cli_token }}));
+  connection.send(JSON.stringify({ event: "middle_auth", data: { token: backend_cred.backend_cli_token } }));
   ////
-  
+
   connection.on('message', function (message) {
     if (message.type === 'utf8') {
       console.log("Tornado Websocket data received: ", JSON.parse(message.utf8Data));
@@ -521,9 +529,15 @@ client.on('connect', function (connection) {
 });
 
 client.connect('ws://' + servers.tornado_websocket + '/ws/ws_db_pubsub', "", "http://" + servers.tornado_websocket);
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//SOCKET WITH EXPRESS GENERATOR:
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * //SOCKET WITH EXPRESS GENERATOR:
+ */
 //REF: https://medium.com/@suhas_chitade/express-generator-with-socket-io-80464341e8ba
 module.exports = { app: app, server: server };
-////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
