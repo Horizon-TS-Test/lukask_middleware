@@ -10,7 +10,7 @@ var request = require('request');
 var fs = require("fs");
 ////////////////////////////////////////////////////////////
 
-var getPub = function (userId, token, callback) {
+var getPubs = function (userId, token, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
 
@@ -29,7 +29,7 @@ var getPub = function (userId, token, callback) {
 
     get.on("error", function (err) {
         console.log(err);
-        callback(500, err.code);
+        callback(500, err);
     });
     ////
 
@@ -74,7 +74,7 @@ var postPub = function (body, files, token, callback) {
     form.append('type_publication', body.type_publication);
 
     for (var i = 0; i < files.length; i++) {
-        form.append('medios_data[' + i + ']format_multimedia', (files[0].mimetype.indexOf("image")) ? "IG" : "FL");
+        form.append('medios_data[' + i + ']format_multimedia', (files[0].mimetype.indexOf("image") != -1) ? "IG" : "FL");
         form.append('medios_data[' + i + ']name_file', files[i].originalname);
         form.append('medios_data[' + i + ']description_file', body.detail);
         form.append('medios_data[' + i + ']media_file', fs.createReadStream(files[i].path), { filename: files[i].originalname, contentType: files[i].mimetype });
@@ -82,7 +82,7 @@ var postPub = function (body, files, token, callback) {
     //////////////////////////////////////////////////////////////////////////////////////
 }
 
-/*var getTodo = function (todoId, token, callback) {
+var getPub = function (id, token, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
 
@@ -94,21 +94,21 @@ var postPub = function (body, files, token, callback) {
         }
     }
 
-    var get = client.get(restUrl.todo + todoId + "/", args, function (data, response) {
+    var get = client.get(restUrl.pub + id + "/", args, function (data, response) {
         console.log(data);
         callback(response.statusCode, data);
     });
 
     get.on("error", function (err) {
         console.log(err);
-        callback(500, err.code);
+        callback(500, err);
     });
     ////
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
-var patchTodo = function (todoId, todoData, token, callback) {
+/*var patchTodo = function (todoId, todoData, token, callback) {
     ////////////////////////////////// POST REQUEST //////////////////////////////////////
     request.patch({
         url: restUrl.todo + todoId + "/",
@@ -155,9 +155,9 @@ var deleteTodo = function (todoId, token, callback) {
 }*/
 
 module.exports = {
-    getPub: getPub,
+    getPubs: getPubs,
     postPub: postPub,
-    /*getTodo: getTodo,
-    patchTodo: patchTodo,
+    getPub: getPub,
+    /*patchTodo: patchTodo,
     deleteTodo: deleteTodo*/
 }

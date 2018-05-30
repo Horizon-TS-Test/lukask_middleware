@@ -15,7 +15,7 @@ router.get('/', function (req, res, next) {
   let userId = 1;
   let token = req.session.key.token;
 
-  publicationRestClient.getPub(userId, token, function (responseCode, data) {
+  publicationRestClient.getPubs(userId, token, function (responseCode, data) {
     if (responseCode == 200) {
       return res.status(responseCode).json({
         code: responseCode,
@@ -54,16 +54,16 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
   });
 });
 
-/*router.get('/:todoId', function (req, res, next) {
-  let todoId = req.params.todoId;
+router.get('/:pubId', function (req, res, next) {
+  let pubId = req.params.pubId;
   let token = req.session.key.token;
 
-  publicationRestClient.getTodo(todoId, token, function (responseCode, data) {
+  publicationRestClient.getPub(pubId, token, function (responseCode, data) {
     if (responseCode == 200) {
       return res.status(responseCode).json({
         code: responseCode,
-        title: "Successfully retrieving todo detail",
-        data: data
+        title: "Successfully retrieving pub detail",
+        pub: data
       });
     }
     return res.status(responseCode).json({
@@ -74,7 +74,7 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
   });
 });
 
-router.post('/:todoId', upload.single('todo_image'), function (req, res, next) {
+/*router.post('/:todoId', upload.single('todo_image'), function (req, res, next) {
   let todoId = req.params.todoId;
   let token = req.session.key.token;
 
