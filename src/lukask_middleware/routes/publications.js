@@ -54,6 +54,26 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
   });
 });
 
+router.get('/filter/:city', function (req, res, next) {
+  let cityFilter = req.params.city;
+  let token = req.session.key.token;
+
+  publicationRestClient.getPubFilter(token, cityFilter, function (responseCode, data) {
+    if (responseCode == 200) {
+      return res.status(responseCode).json({
+        code: responseCode,
+        title: "Successfully retrieving of publication data with filter",
+        data: data
+      });
+    }
+    return res.status(responseCode).json({
+      code: responseCode,
+      title: "An error has occurred",
+      error: data
+    });
+  });
+});
+
 /*router.get('/:todoId', function (req, res, next) {
   let todoId = req.params.todoId;
   let token = req.session.key.token;

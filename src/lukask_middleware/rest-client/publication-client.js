@@ -32,6 +32,31 @@ var getPub = function (userId, token, callback) {
         callback(500, err.code);
     });
     ////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+}
+
+var getPublicacion = function (userId, token, callback) {
+    ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
+    var client = new Client();
+
+    //GET METHOD:
+    var args = {
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Token " + token
+        }
+    }
+
+    var get = client.get(restUrl.pub, args, function (data, response) {
+        //console.log(data);
+        callback(response.statusCode, data);
+    });
+
+    get.on("error", function (err) {
+        console.log(err);
+        callback(500, err.code);
+    });
+    ////
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
@@ -80,6 +105,30 @@ var postPub = function (body, files, token, callback) {
         form.append('medios_data[' + i + ']media_file', fs.createReadStream(files[i].path), { filename: files[i].originalname, contentType: files[i].mimetype });
     }
     //////////////////////////////////////////////////////////////////////////////////////
+}
+
+var getPubFilter = function (token, cityFilter, callback) {
+    ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
+    var client = new Client();
+    var filter = "?search=" + cityFilter;
+    //GET METHOD:
+    var args = {
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Token " + token
+        }
+    }
+
+    var get = client.get(restUrl.pub + filter, args, function (data, response) {
+        callback(response.statusCode, data);
+    });
+
+    get.on("error", function (err) {
+        console.log(err);
+        callback(500, err.code);
+    });
+    ////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
 /*var getTodo = function (todoId, token, callback) {
@@ -157,6 +206,7 @@ var deleteTodo = function (todoId, token, callback) {
 module.exports = {
     getPub: getPub,
     postPub: postPub,
+    getPubFilter: getPubFilter,
     /*getTodo: getTodo,
     patchTodo: patchTodo,
     deleteTodo: deleteTodo*/
