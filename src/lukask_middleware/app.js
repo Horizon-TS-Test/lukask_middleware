@@ -33,6 +33,7 @@ var bodyParser = require('body-parser');
 /**
  * ///////////////////////////ROUTES://///////////////////////
  */
+var commentRoute = require('./routes/comment');
 var qtypeRoute = require('./routes/qtype');
 var publicationsRoute = require('./routes/publications');
 var loginRoute = require('./routes/login');
@@ -197,6 +198,13 @@ app.use(function (req, res, next) {
 
       let localEncrypted = req.session.key.crypto_user_id;
       //let userEncrypted = req.query.userId;
+      if (!req.headers['x-access-token']) {
+        return res.status(401).json({
+          code: 401,
+          title: "Not Authorized",
+          data: "You must provide user credentials"
+        });
+      }
       //REF: https://scotch.io/tutorials/authenticate-a-node-js-api-with-json-web-tokens
       let userEncrypted = req.headers['x-access-token'];
 
@@ -268,6 +276,7 @@ io.use(function (socket, next) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+app.use('/comment', commentRoute);
 app.use('/qtype', qtypeRoute);
 app.use('/publication', publicationsRoute);
 app.use('/login', loginRoute);
@@ -429,7 +438,7 @@ client.on('connect', function (connection) {
       }
     }
   };
-  
+
   connection.send(JSON.stringify(msg));
 
   var msg = {
@@ -443,7 +452,7 @@ client.on('connect', function (connection) {
   };
 
   connection.send(JSON.stringify(msg));
-  
+
   var msg = {
     stream: "publication",
     payload: {
