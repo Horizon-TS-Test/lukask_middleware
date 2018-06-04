@@ -38,7 +38,7 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
   req.body.action_type = commentType;
   
   console.log(req.body);
-  actionRestClient.postAction(req.body, req.files, token, function (responseCode, data) {
+  actionRestClient.postAction(req.body, req.file, token, function (responseCode, data) {
     if (responseCode == 201 || responseCode == 200) {
       wepushClient.notify('Nuevo comentario registrado', req.body.description, '/inicio', function (resCode, commentData) {
         console.log(resCode, commentData);
