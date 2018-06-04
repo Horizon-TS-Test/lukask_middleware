@@ -73,11 +73,13 @@ var postPub = function (body, files, token, callback) {
     form.append('date_publication', body.date_publication);
     form.append('type_publication', body.type_publication);
 
-    for (var i = 0; i < files.length; i++) {
-        form.append('medios_data[' + i + ']format_multimedia', (files[0].mimetype.indexOf("image") != -1) ? "IG" : "FL");
-        form.append('medios_data[' + i + ']name_file', files[i].originalname);
-        form.append('medios_data[' + i + ']description_file', body.detail);
-        form.append('medios_data[' + i + ']media_file', fs.createReadStream(files[i].path), { filename: files[i].originalname, contentType: files[i].mimetype });
+    if (files) {
+        for (var i = 0; i < files.length; i++) {
+            form.append('medios_data[' + i + ']format_multimedia', (files[0].mimetype.indexOf("image") != -1) ? "IG" : "FL");
+            form.append('medios_data[' + i + ']name_file', files[i].originalname);
+            form.append('medios_data[' + i + ']description_file', body.detail);
+            form.append('medios_data[' + i + ']media_file', fs.createReadStream(files[i].path), { filename: files[i].originalname, contentType: files[i].mimetype });
+        }
     }
     //////////////////////////////////////////////////////////////////////////////////////
 }
