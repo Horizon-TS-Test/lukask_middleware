@@ -1,7 +1,8 @@
 var express = require('express');
 var router = express.Router();
 
-var publicationRestClient = require('./../rest-client/publication-client');
+var actionRestClient = require('./../rest-client/action-client');
+var actionTypes = require('./../const/action-types');
 
 var request = require('request');
 /////////////////////// FILE UPLOAD ////////////////////////
@@ -11,7 +12,7 @@ var upload = multer({ dest: 'tmp_uploads/' });
 
 var wepushClient = require('./../rest-client/webpush-client');
 
-router.get('/', function (req, res, next) {
+/*router.get('/', function (req, res, next) {
   let userId = 1;
   let token = req.session.key.token;
 
@@ -29,41 +30,24 @@ router.get('/', function (req, res, next) {
       error: data
     });
   });
-});
+});*/
 
-router.get('/filter/:city', function (req, res, next) {
-  let cityFilter = req.params.city;
+router.post('/', upload.single('media_file'), function (req, res, next) {
   let token = req.session.key.token;
-
-  publicationRestClient.getPubFilter(token, cityFilter, function (responseCode, data) {
-    if (responseCode == 200) {
-      return res.status(responseCode).json({
-        code: responseCode,
-        title: "Successfully retrieving of publication data with filter",
-        data: data
-      });
-    }
-    return res.status(responseCode).json({
-      code: responseCode,
-      title: "An error has occurred",
-      error: data
-    });
-  });
-});
-
-router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
-  let token = req.session.key.token;
+  let commentType = actionTypes.comment;
+  req.body.action_type = commentType;
   
-  publicationRestClient.postPub(req.body, req.files, token, function (responseCode, data) {
-    if (responseCode == 201) {
-      wepushClient.notify('Nueva publicación registrada', req.body.detail, '/inicio', function (resCode, notifData) {
-        console.log(resCode, notifData);
+  console.log(req.body);
+  actionRestClient.postAction(req.body, req.file, token, function (responseCode, data) {
+    if (responseCode == 201 || responseCode == 200) {
+      wepushClient.notify('Nuevo comentario registrado', req.body.description, '/inicio', function (resCode, commentData) {
+        console.log(resCode, commentData);
       });
 
       return res.status(responseCode).json({
         code: responseCode,
-        title: "Publication has been created successfully",
-        pub: data
+        title: "Action has been created successfully",
+        comment: data
       });
     }
     return res.status(responseCode).json({
@@ -74,7 +58,7 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
   });
 });
 
-router.get('/:pubId', function (req, res, next) {
+/*router.get('/:pubId', function (req, res, next) {
   let pubId = req.params.pubId;
   let token = req.session.key.token;
 
@@ -92,7 +76,7 @@ router.get('/:pubId', function (req, res, next) {
       error: data
     });
   });
-});
+});*/
 
 /*router.post('/:todoId', upload.single('todo_image'), function (req, res, next) {
   let todoId = req.params.todoId;

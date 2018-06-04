@@ -10,7 +10,7 @@ var request = require('request');
 var fs = require("fs");
 ////////////////////////////////////////////////////////////
 
-var getPub = function (userId, token, callback) {
+var getPubs = function (userId, token, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
 
@@ -29,16 +29,17 @@ var getPub = function (userId, token, callback) {
 
     get.on("error", function (err) {
         console.log(err);
-        callback(500, err.code);
+        callback(500, err);
     });
     ////
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
-var getPublicacion = function (userId, token, callback) {
+var getPubFilter = function (token, cityFilter, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
-
+    var filter = "?search=" + cityFilter;
     //GET METHOD:
     var args = {
         headers: {
@@ -47,8 +48,7 @@ var getPublicacion = function (userId, token, callback) {
         }
     }
 
-    var get = client.get(restUrl.pub, args, function (data, response) {
-        //console.log(data);
+    var get = client.get(restUrl.pub + filter, args, function (data, response) {
         callback(response.statusCode, data);
     });
 
@@ -57,7 +57,6 @@ var getPublicacion = function (userId, token, callback) {
         callback(500, err.code);
     });
     ////
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
@@ -98,40 +97,18 @@ var postPub = function (body, files, token, callback) {
     form.append('date_publication', body.date_publication);
     form.append('type_publication', body.type_publication);
 
-    for (var i = 0; i < files.length; i++) {
-        form.append('medios_data[' + i + ']format_multimedia', (files[0].mimetype.indexOf("image")) ? "IG" : "FL");
-        form.append('medios_data[' + i + ']name_file', files[i].originalname);
-        form.append('medios_data[' + i + ']description_file', body.detail);
-        form.append('medios_data[' + i + ']media_file', fs.createReadStream(files[i].path), { filename: files[i].originalname, contentType: files[i].mimetype });
+    if (files) {
+        for (var i = 0; i < files.length; i++) {
+            form.append('medios_data[' + i + ']format_multimedia', (files[0].mimetype.indexOf("image") != -1) ? "IG" : "FL");
+            form.append('medios_data[' + i + ']name_file', files[i].originalname);
+            form.append('medios_data[' + i + ']description_file', body.detail);
+            form.append('medios_data[' + i + ']media_file', fs.createReadStream(files[i].path), { filename: files[i].originalname, contentType: files[i].mimetype });
+        }
     }
     //////////////////////////////////////////////////////////////////////////////////////
 }
 
-var getPubFilter = function (token, cityFilter, callback) {
-    ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
-    var client = new Client();
-    var filter = "?search=" + cityFilter;
-    //GET METHOD:
-    var args = {
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Token " + token
-        }
-    }
-
-    var get = client.get(restUrl.pub + filter, args, function (data, response) {
-        callback(response.statusCode, data);
-    });
-
-    get.on("error", function (err) {
-        console.log(err);
-        callback(500, err.code);
-    });
-    ////
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////
-}
-
-/*var getTodo = function (todoId, token, callback) {
+var getPub = function (id, token, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
 
@@ -143,21 +120,21 @@ var getPubFilter = function (token, cityFilter, callback) {
         }
     }
 
-    var get = client.get(restUrl.todo + todoId + "/", args, function (data, response) {
+    var get = client.get(restUrl.pub + id + "/", args, function (data, response) {
         console.log(data);
         callback(response.statusCode, data);
     });
 
     get.on("error", function (err) {
         console.log(err);
-        callback(500, err.code);
+        callback(500, err);
     });
     ////
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
-var patchTodo = function (todoId, todoData, token, callback) {
+/*var patchTodo = function (todoId, todoData, token, callback) {
     ////////////////////////////////// POST REQUEST //////////////////////////////////////
     request.patch({
         url: restUrl.todo + todoId + "/",
@@ -204,10 +181,10 @@ var deleteTodo = function (todoId, token, callback) {
 }*/
 
 module.exports = {
-    getPub: getPub,
-    postPub: postPub,
+    getPubs: getPubs,
     getPubFilter: getPubFilter,
-    /*getTodo: getTodo,
-    patchTodo: patchTodo,
+    postPub: postPub,
+    getPub: getPub,
+    /*patchTodo: patchTodo,
     deleteTodo: deleteTodo*/
 }
