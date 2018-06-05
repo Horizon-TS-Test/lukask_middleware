@@ -51,6 +51,27 @@ router.get('/filter/:city', function (req, res, next) {
   });
 });
 
+router.get('/page/:limit', function (req, res, next) {
+  let token = req.session.key.token;
+  let limit = isNaN(parseInt(req.params.limit)) ? null : req.params.limit;
+  let pagePattern = (req.headers['page-pattern']) ? req.headers['page-pattern'] : null;
+
+  publicationRestClient.getPubByPage(token, limit, pagePattern, function (responseCode, data) {
+    if (responseCode == 200) {
+      return res.status(responseCode).json({
+        code: responseCode,
+        title: "Successfully retrieving of publication data with pagination",
+        data: data
+      });
+    }
+    return res.status(responseCode).json({
+      code: responseCode,
+      title: "An error has occurred",
+      error: data
+    });
+  });
+});
+
 router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
   let token = req.session.key.token;
   

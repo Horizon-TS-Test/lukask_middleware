@@ -60,6 +60,47 @@ var getPubFilter = function (token, cityFilter, callback) {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
+var getPubByPage = function (token, limit, pagePattern = null, callback) {
+    ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
+    var client = new Client();
+    var limit = ((limit) ? "?limit=" + limit : "");
+    var get;
+
+    //GET METHOD:
+    var args = {
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Token " + token
+        }
+    }
+
+    if (pagePattern) {
+        get = client.get(restUrl.pub + pagePattern, args, function (data, response) {
+            if (data.next) {
+                data.next = data.next.substring(data.next.indexOf("?"));
+            }
+            console.log(data);
+            callback(response.statusCode, data);
+        });
+    }
+    else {
+        get = client.get(restUrl.pub + limit, args, function (data, response) {
+            if (data.next) {
+                data.next = data.next.substring(data.next.indexOf("?"));
+            }
+            console.log(data);
+            callback(response.statusCode, data);
+        });
+    }
+
+    get.on("error", function (err) {
+        console.log(err);
+        callback(500, err.code);
+    });
+    ////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+}
+
 var postPub = function (body, files, token, callback) {
     ////////////////////////////////// POST REQUEST //////////////////////////////////////
     var r = request.post(
@@ -184,6 +225,7 @@ var deleteTodo = function (todoId, token, callback) {
 module.exports = {
     getPubs: getPubs,
     getPubFilter: getPubFilter,
+    getPubByPage: getPubByPage,
     postPub: postPub,
     getPub: getPub,
     /*patchTodo: patchTodo,

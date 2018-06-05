@@ -104,7 +104,7 @@ app.use(express.static(path.join(__dirname, 'node_modules')));
 app.use(function (req, res, next) {
   res.setHeader('Access-Control-Allow-Origin', servers.allow_origin);
   //res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, Content-Length, X-Requested-With, Content-Type, Accept, X-Access-Token, Pass-Key');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, Content-Length, X-Requested-With, Content-Type, Accept, X-Access-Token, Pass-Key, Page-Pattern');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, DELETE, OPTIONS, PATCH');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
