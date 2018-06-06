@@ -10,9 +10,12 @@ var request = require('request');
 var fs = require("fs");
 ////////////////////////////////////////////////////////////
 
-/*var getPubs = function (userId, token, callback) {
+var getActions = function (pubId, typeAction, limit, pagePattern, token, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
+    var queryFilter = "?publication__id_publication=" + pubId + "&type_action__id_type_action=" + typeAction;
+    limit = ((limit) ? "&limit=" + limit : "");
+    var get;
 
     //GET METHOD:
     var args = {
@@ -22,10 +25,24 @@ var fs = require("fs");
         }
     }
 
-    var get = client.get(restUrl.pub, args, function (data, response) {
-        //console.log(data);
-        callback(response.statusCode, data);
-    });
+    if (pagePattern) {
+        get = client.get(restUrl.action + queryFilter + pagePattern, args, function (data, response) {
+            if (data.next) {
+                data.next = "&" + data.next.substring(data.next.indexOf("?") + 1, data.next.indexOf("&", data.next.indexOf("&") + 1));
+            }
+            console.log(data);
+            callback(response.statusCode, data);
+        });
+    }
+    else {
+        get = client.get(restUrl.action + queryFilter + limit, args, function (data, response) {
+            if (data.next) {
+                data.next = "&" + data.next.substring(data.next.indexOf("?") + 1, data.next.indexOf("&", data.next.indexOf("&") + 1));
+            }
+            console.log(data);
+            callback(response.statusCode, data);
+        });
+    }
 
     get.on("error", function (err) {
         console.log(err);
@@ -34,7 +51,7 @@ var fs = require("fs");
     ////
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
-}*/
+}
 
 var postAction = function (body, file, token, callback) {
     ////////////////////////////////// POST REQUEST //////////////////////////////////////
@@ -105,7 +122,7 @@ var postAction = function (body, file, token, callback) {
 }*/
 
 module.exports = {
-    //getPubs: getPubs,
+    getActions: getActions,
     postAction: postAction,
     //getPub: getPub,
     /*patchTodo: patchTodo,

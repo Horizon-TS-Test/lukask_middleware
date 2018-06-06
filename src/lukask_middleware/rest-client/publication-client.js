@@ -63,7 +63,7 @@ var getPubFilter = function (token, cityFilter, callback) {
 var getPubByPage = function (token, limit, pagePattern = null, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
-    var limit = ((limit) ? "?limit=" + limit : "");
+    limit = ((limit) ? "?limit=" + limit : "");
     var get;
 
     //GET METHOD:

@@ -12,16 +12,27 @@ var upload = multer({ dest: 'tmp_uploads/' });
 
 var wepushClient = require('./../rest-client/webpush-client');
 
-/*router.get('/', function (req, res, next) {
-  let userId = 1;
-  let token = req.session.key.token;
+router.get('/', function (req, res, next) {
+  if (!req.query.pub_id) {
+    return res.status(400).json({
+      code: responseCode,
+      title: "An error has ocurred",
+      error: "A publication id must be provided"
+    });
+  }
 
-  publicationRestClient.getPubs(userId, token, function (responseCode, data) {
+  let token = req.session.key.token;
+  let pubId = req.query.pub_id;
+  let commentType = actionTypes.comment;
+  let limit = (req.query.limit) ? req.query.limit : null;
+  let pagePattern = (req.headers['page-pattern']) ? req.headers['page-pattern'] : null;
+
+  actionRestClient.getActions(pubId, commentType, limit, pagePattern, token, function (responseCode, data) {
     if (responseCode == 200) {
       return res.status(responseCode).json({
         code: responseCode,
-        title: "Successfully retrieving of publication data",
-        data: data
+        title: "Successfully retrieving comments data",
+        comments: data
       });
     }
     return res.status(responseCode).json({
@@ -30,13 +41,13 @@ var wepushClient = require('./../rest-client/webpush-client');
       error: data
     });
   });
-});*/
+});
 
 router.post('/', upload.single('media_file'), function (req, res, next) {
   let token = req.session.key.token;
   let commentType = actionTypes.comment;
   req.body.action_type = commentType;
-  
+
   console.log(req.body);
   actionRestClient.postAction(req.body, req.file, token, function (responseCode, data) {
     if (responseCode == 201 || responseCode == 200) {

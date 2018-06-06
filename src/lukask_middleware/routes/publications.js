@@ -10,7 +10,7 @@ var upload = multer({ dest: 'tmp_uploads/' });
 
 var wepushClient = require('./../rest-client/webpush-client');
 
-router.get('/', function (req, res, next) {
+/*router.get('/', function (req, res, next) {
   let userId = 1;
   let token = req.session.key.token;
 
@@ -28,7 +28,7 @@ router.get('/', function (req, res, next) {
       error: data
     });
   });
-});
+});*/
 
 router.get('/filter/:city', function (req, res, next) {
   let cityFilter = req.params.city;
@@ -50,9 +50,9 @@ router.get('/filter/:city', function (req, res, next) {
   });
 });
 
-router.get('/page/:limit', function (req, res, next) {
+router.get('/', function (req, res, next) {
   let token = req.session.key.token;
-  let limit = isNaN(parseInt(req.params.limit)) ? null : req.params.limit;
+  let limit = isNaN(parseInt(req.query.limit)) ? null : req.query.limit;
   let pagePattern = (req.headers['page-pattern']) ? req.headers['page-pattern'] : null;
 
   publicationRestClient.getPubByPage(token, limit, pagePattern, function (responseCode, data) {
