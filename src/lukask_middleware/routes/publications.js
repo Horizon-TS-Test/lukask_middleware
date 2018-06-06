@@ -3,7 +3,6 @@ var router = express.Router();
 
 var publicationRestClient = require('./../rest-client/publication-client');
 
-var request = require('request');
 /////////////////////// FILE UPLOAD ////////////////////////
 var multer = require("multer");
 var upload = multer({ dest: 'tmp_uploads/' });

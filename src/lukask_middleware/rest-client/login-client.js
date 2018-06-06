@@ -1,6 +1,6 @@
 var restUrl = require('./../config/rest-api-url');
 
-var Client = require("node-rest-client").Client;
+var Client = require('node-rest-client').Client;
 
 var restLogin = function (username, password, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
