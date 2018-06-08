@@ -13,21 +13,22 @@ var upload = multer({ dest: 'tmp_uploads/' });
 var wepushClient = require('./../rest-client/webpush-client');
 
 router.get('/', function (req, res, next) {
-  if (!req.query.pub_id) {
+  if (!req.query.pub_id && !req.query.com_id) {
     return res.status(400).json({
       code: responseCode,
       title: "An error has ocurred",
-      error: "A publication id must be provided"
+      error: "A parent id must be provided"
     });
   }
 
   let token = req.session.key.token;
-  let pubId = req.query.pub_id;
   let commentType = actionTypes.comment;
+  let parentId = (req.query.pub_id) ? req.query.pub_id : req.query.com_id;
+  let replies = (req.query.replies) ? req.query.replies : false;
   let limit = (req.query.limit) ? req.query.limit : null;
   let pagePattern = (req.headers['page-pattern']) ? req.headers['page-pattern'] : null;
 
-  actionRestClient.getActions(pubId, commentType, limit, pagePattern, token, function (responseCode, data) {
+  actionRestClient.getActions(commentType, parentId, replies, limit, pagePattern, token, function (responseCode, data) {
     if (responseCode == 200) {
       return res.status(responseCode).json({
         code: responseCode,

@@ -10,11 +10,17 @@ var request = require('request');
 var fs = require("fs");
 ////////////////////////////////////////////////////////////
 
-var getActions = function (pubId, typeAction, limit, pagePattern, token, callback) {
+var getActions = function (typeAction, parentId, replies, limit, pagePattern, token, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
-    var queryFilter = "?publication__id_publication=" + pubId + "&type_action__id_type_action=" + typeAction;
-    limit = ((limit) ? "&limit=" + limit : "");
+    var typeFilter = "?type_action__id_type_action=" + typeAction;
+    var parentFilter = (replies) ? "&action_parent__id_action=" + parentId : "&publication__id_publication=" + parentId;
+    var commentReplyFilter = (replies) ? "&qrOp=replies" : "&qrOp=comments";
+    var limitFilter = (limit) ? "&limit=" + limit : "";
+
+    var queryFilter = typeFilter + parentFilter + commentReplyFilter + limitFilter;
+    var nextPattern;
+
     var get;
 
     //GET METHOD:
@@ -28,16 +34,20 @@ var getActions = function (pubId, typeAction, limit, pagePattern, token, callbac
     if (pagePattern) {
         get = client.get(restUrl.action + queryFilter + pagePattern, args, function (data, response) {
             if (data.next) {
-                data.next = "&" + data.next.substring(data.next.indexOf("?") + 1, data.next.indexOf("&", data.next.indexOf("&") + 1));
+                nextPattern = "&" + data.next.substring(data.next.indexOf("limit="), data.next.indexOf("&", data.next.indexOf("limit=")));
+                nextPattern += "&" + data.next.substring(data.next.indexOf("offset="), data.next.indexOf("&", data.next.indexOf("offset=")));
+                data.next = nextPattern;
             }
             console.log(data);
             callback(response.statusCode, data);
         });
     }
     else {
-        get = client.get(restUrl.action + queryFilter + limit, args, function (data, response) {
+        get = client.get(restUrl.action + queryFilter, args, function (data, response) {
             if (data.next) {
-                data.next = "&" + data.next.substring(data.next.indexOf("?") + 1, data.next.indexOf("&", data.next.indexOf("&") + 1));
+                nextPattern = "&" + data.next.substring(data.next.indexOf("limit="), data.next.indexOf("&", data.next.indexOf("limit=")));
+                nextPattern += "&" + data.next.substring(data.next.indexOf("offset="), data.next.indexOf("&", data.next.indexOf("offset=")));
+                data.next = nextPattern;
             }
             console.log(data);
             callback(response.statusCode, data);
