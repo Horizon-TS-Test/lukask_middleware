@@ -92,10 +92,11 @@ var postAction = function (body, file, token, callback) {
         });
 
     var form = r.form();
-    form.append('description', body.description);
+    form.append('description', (body.description) ? body.description : "");
     form.append('type_action', body.action_type);
     form.append('publication', body.id_publication);
-    form.append('action_parent', body.action_parent);
+    form.append('action_parent', (body.action_parent) ? body.action_parent : "");
+    form.append('active', body.active + "");
 
     if (file) {
         form.append('format_multimedia', (file.mimetype.indexOf("image") != -1) ? "IG" : "FL");
