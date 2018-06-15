@@ -33,6 +33,7 @@ var bodyParser = require('body-parser');
 /**
  * ///////////////////////////ROUTES://///////////////////////
  */
+var userRoute = require('./routes/user');
 var relevanceRoute = require('./routes/relevance');
 var commentRoute = require('./routes/comment');
 var qtypeRoute = require('./routes/qtype');
@@ -276,6 +277,7 @@ io.use(function (socket, next) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+app.use('/user', userRoute);
 app.use('/relevance', relevanceRoute);
 app.use('/comment', commentRoute);
 app.use('/qtype', qtypeRoute);
