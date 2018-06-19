@@ -53,9 +53,9 @@ router.get('/filter/:city', function (req, res, next) {
 router.get('/', function (req, res, next) {
   let token = req.session.key.token;
   let limit = isNaN(parseInt(req.query.limit)) ? null : req.query.limit;
-  let pagePattern = (req.headers['page-pattern']) ? req.headers['page-pattern'] : null;
+  let offset = (req.query.offset) ? req.query.offset : null;
 
-  publicationRestClient.getPubByPage(token, limit, pagePattern, function (responseCode, data) {
+  publicationRestClient.getPubByPage(token, limit, offset, function (responseCode, data) {
     if (responseCode == 200) {
       return res.status(responseCode).json({
         code: responseCode,
@@ -73,7 +73,7 @@ router.get('/', function (req, res, next) {
 
 router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
   let token = req.session.key.token;
-  
+
   publicationRestClient.postPub(req.body, req.files, token, function (responseCode, data) {
     if (responseCode == 201) {
       wepushClient.notify('Nueva publicación registrada', req.body.detail, '/inicio', function (resCode, notifData) {

@@ -60,10 +60,13 @@ var getPubFilter = function (token, cityFilter, callback) {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
-var getPubByPage = function (token, limit, pagePattern = null, callback) {
+var getPubByPage = function (token, limit, offset, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
     limit = ((limit) ? "?limit=" + limit : "");
+    offset = ((offset) ? "&offset=" + offset : "");
+    var filter = limit + offset;
+
     var get;
 
     //GET METHOD:
@@ -74,24 +77,13 @@ var getPubByPage = function (token, limit, pagePattern = null, callback) {
         }
     }
 
-    if (pagePattern) {
-        get = client.get(restUrl.pub + pagePattern, args, function (data, response) {
-            if (data.next) {
-                data.next = data.next.substring(data.next.indexOf("?"));
-            }
-            console.log(data);
-            callback(response.statusCode, data);
-        });
-    }
-    else {
-        get = client.get(restUrl.pub + limit, args, function (data, response) {
-            if (data.next) {
-                data.next = data.next.substring(data.next.indexOf("?"));
-            }
-            console.log(data);
-            callback(response.statusCode, data);
-        });
-    }
+    get = client.get(restUrl.pub + filter, args, function (data, response) {
+        if (data.next) {
+            data.next = data.next.substring(data.next.indexOf("?"));
+        }
+        console.log(data);
+        callback(response.statusCode, data);
+    });
 
     get.on("error", function (err) {
         console.log(err);
