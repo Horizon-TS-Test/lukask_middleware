@@ -9,11 +9,11 @@ var request = require('request');
 var fs = require("fs");
 ////////////////////////////////////////////////////////////
 
-var postUser = function (user_id,body, file, token, callback) {
+var postUser = function (user_id, body, file, token, callback) {
     ////////////////////////////////// POST REQUEST //////////////////////////////////////
     var r = request.patch(
         {
-            url: restUrl.user+user_id+"/",
+            url: restUrl.user + user_id + "/",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Authorization": "Token " + token
@@ -25,10 +25,8 @@ var postUser = function (user_id,body, file, token, callback) {
             }
             if (httpResponse.statusCode == 200) {
                 if (file) {
-                    for (var i = 0; i < file.length; i++) {
-                        console.log("Elimando archivo: " + file[i].path);
-                        fs.unlink(file[i].path);
-                    }
+                    console.log("Elimando archivo: " + file[i].path);
+                    fs.unlink(file.path);
                 }
                 console.log('Publication has been created successfully, Server responded with: ', JSON.parse(data));
                 callback(httpResponse.statusCode, JSON.parse(data));
@@ -50,7 +48,9 @@ var postUser = function (user_id,body, file, token, callback) {
     form.append('person.telephone', body.telephone);
     form.append('person.address', body.address);
     form.append('is_active', body.is_active);
-    form.append("media_profile", fs.createReadStream(file.path), { filename: file.originalname, contentType: file.mimetype } );
+    if (file) {
+        form.append("media_profile", fs.createReadStream(file.path), { filename: file.originalname, contentType: file.mimetype });
+    }
     //////////////////////////////////////////////////////////////////////////////////////
 }
 

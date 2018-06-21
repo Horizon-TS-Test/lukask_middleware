@@ -21,7 +21,7 @@ router.post('/:user_id',upload.single('user_file'), function (req, res, next) {
       return res.status(responseCode).json({
         code: responseCode,
         title: "Publication has been created successfully",
-        pub: data
+        data: data
       });
     }
     return res.status(responseCode).json({
