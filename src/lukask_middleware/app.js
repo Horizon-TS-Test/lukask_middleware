@@ -33,12 +33,16 @@ var bodyParser = require('body-parser');
 /**
  * ///////////////////////////ROUTES://///////////////////////
  */
+var signInRoute = require('./routes/signIn.js');
 var userRoute = require('./routes/user');
 var relevanceRoute = require('./routes/relevance');
 var commentRoute = require('./routes/comment');
 var qtypeRoute = require('./routes/qtype');
 var publicationsRoute = require('./routes/publications');
 var loginRoute = require('./routes/login');
+var provinciaRoute = require('./routes/province');
+var cantonRoute = require('./routes/canton');
+var parroquiaRoute = require('./routes/parroquia');
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -129,14 +133,14 @@ app.use(function (req, res, next) {
  */
 
 var midGetClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
-var midSetClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
 app.use(function (req, res, next) {
   //REF: https://stackoverflow.com/questions/12525928/how-to-get-request-path-with-express-req-object
-  if (req.originalUrl.indexOf('login') === -1 && req.originalUrl.indexOf('logout') === -1) {
+  if (req.originalUrl.indexOf('parroquia') === -1 && req.originalUrl.indexOf('canton') === -1 && req.originalUrl.indexOf('province') === -1 && req.originalUrl.indexOf('signIn') === -1 && req.originalUrl.indexOf('login') === -1 && req.originalUrl.indexOf('logout') === -1) {
     console.log("Express sessions controling middleware");
 
     let workerOrigin = req.headers['pass-key'];
     if (workerOrigin) {
+      console.log(workerOrigin);
       //IF THE SERVICE WORKER SENDS A BACKGROUND SYNC REQUEST:
       let listPromise = new Promise((resolve, reject) => {
         redisClient.keys("sess:*", function (error, keys) {
@@ -200,7 +204,6 @@ app.use(function (req, res, next) {
       }
 
       let localEncrypted = req.session.key.crypto_user_id;
-      //let userEncrypted = req.query.userId;
       if (!req.headers['x-access-token']) {
         return res.status(401).json({
           code: 401,
@@ -222,22 +225,6 @@ app.use(function (req, res, next) {
         });
       }
 
-      //REDIS SESSION TTL RESTARTING:
-      /*redisClient.keys("sess:*", function (error, keys) {
-        for (let key of keys) {
-          midGetClient.get(key, function (err, reply) {
-            let keyData = JSON.parse(reply);
-            if (keyData.key) {
-              if (keyData.key.crypto_user_id == req.session.key.crypto_user_id) {
-                //REF: https://dzone.com/articles/tutorial-working-nodejs-and
-                midSetClient.expire(key, def_exp_time);
-                midSetClient.expire(aux_prefij + key, exp_time);
-              }
-            }
-          });
-        }
-      });*/
-      ////
       next();
     }
   }
@@ -278,12 +265,16 @@ io.use(function (socket, next) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+app.use('/signIn', signInRoute);
 app.use('/user', userRoute);
 app.use('/relevance', relevanceRoute);
 app.use('/comment', commentRoute);
 app.use('/qtype', qtypeRoute);
 app.use('/publication', publicationsRoute);
 app.use('/login', loginRoute);
+app.use('/province', provinciaRoute);
+app.use('/canton', cantonRoute);
+app.use('/parroquia', parroquiaRoute);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

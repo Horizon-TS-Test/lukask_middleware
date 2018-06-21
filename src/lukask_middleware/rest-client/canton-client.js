@@ -1,32 +1,31 @@
-var webpush = require('./../config/push-api');
+var restUrl = require('./../config/rest-api-url');
 var Client = require("node-rest-client").Client;
 
-var notify = function (title, content, open_url, callback) {
+var getCanton = function (provincia_id, token, callback) {
+    console.log("siiiii..................");
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
 
-    //POST METHOD:
+    //GET METHOD:
     var args = {
-        data: {
-            "title": title,
-            "content": content,
-            "open_url": open_url
-        },
         headers: {
             "Content-Type": "application/json",
+            "Authorization": "Token " + token
         }
     }
 
-    var post = client.post(webpush.webpush_url, args, function (data, response) {
+    var get = client.get(restUrl.province + provincia_id + "/", args, function (data, response) {
+        console.log(data);
         callback(response.statusCode, data);
     });
 
-    post.on("error", function (err) {
+    get.on("error", function (err) {
+        console.log(err);
         callback(500, err.code);
     });
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
 module.exports = {
-    notify: notify
+    getCanton: getCanton,
 }
