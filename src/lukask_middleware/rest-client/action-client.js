@@ -10,15 +10,16 @@ var request = require('request');
 var fs = require("fs");
 ////////////////////////////////////////////////////////////
 
-var getActions = function (typeAction, parentId, replies, limit, pagePattern, token, callback) {
+var getActions = function (typeAction, parentId, replies, limit, offset, token, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
     var typeFilter = "?type_action__id_type_action=" + typeAction;
     var parentFilter = (replies) ? "&action_parent__id_action=" + parentId : "&publication__id_publication=" + parentId;
     var commentReplyFilter = (replies) ? "&qrOp=replies" : "&qrOp=comments";
     var limitFilter = (limit) ? "&limit=" + limit : "";
+    var offsetFilter = (offset) ? "&offset=" + offset : "";
 
-    var queryFilter = typeFilter + parentFilter + commentReplyFilter + limitFilter;
+    var queryFilter = typeFilter + parentFilter + commentReplyFilter + limitFilter + offsetFilter;
     var nextPattern;
 
     var get;
@@ -31,28 +32,15 @@ var getActions = function (typeAction, parentId, replies, limit, pagePattern, to
         }
     }
 
-    if (pagePattern) {
-        get = client.get(restUrl.action + queryFilter + pagePattern, args, function (data, response) {
-            if (data.next) {
-                nextPattern = "&" + data.next.substring(data.next.indexOf("limit="), data.next.indexOf("&", data.next.indexOf("limit=")));
-                nextPattern += "&" + data.next.substring(data.next.indexOf("offset="), data.next.indexOf("&", data.next.indexOf("offset=")));
-                data.next = nextPattern;
-            }
-            console.log(data);
-            callback(response.statusCode, data);
-        });
-    }
-    else {
-        get = client.get(restUrl.action + queryFilter, args, function (data, response) {
-            if (data.next) {
-                nextPattern = "&" + data.next.substring(data.next.indexOf("limit="), data.next.indexOf("&", data.next.indexOf("limit=")));
-                nextPattern += "&" + data.next.substring(data.next.indexOf("offset="), data.next.indexOf("&", data.next.indexOf("offset=")));
-                data.next = nextPattern;
-            }
-            console.log(data);
-            callback(response.statusCode, data);
-        });
-    }
+    get = client.get(restUrl.action + queryFilter, args, function (data, response) {
+        if (data.next) {
+            nextPattern = "&" + data.next.substring(data.next.indexOf("limit="), data.next.indexOf("&", data.next.indexOf("limit=")));
+            nextPattern += "&" + data.next.substring(data.next.indexOf("offset="), data.next.indexOf("&", data.next.indexOf("offset=")));
+            data.next = nextPattern;
+        }
+        console.log(data);
+        callback(response.statusCode, data);
+    });
 
     get.on("error", function (err) {
         console.log(err);

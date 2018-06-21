@@ -106,7 +106,7 @@ app.use(express.static(path.join(__dirname, 'node_modules')));
 app.use(function (req, res, next) {
   res.setHeader('Access-Control-Allow-Origin', servers.allow_origin);
   //res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, Content-Length, X-Requested-With, Content-Type, Accept, X-Access-Token, Pass-Key, Page-Pattern');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, Content-Length, X-Requested-With, Content-Type, Accept, X-Access-Token, Pass-Key');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, DELETE, OPTIONS, PATCH');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
@@ -169,7 +169,8 @@ app.use(function (req, res, next) {
                 resolve(true);
               }
             }).catch((err) => {
-              console.log("none");
+              console.log("[LUKASK MIDDLEWARE] No existe registro de sesión del cliente Service Worker");
+              reject(false);
             });
           }
         });
@@ -445,18 +446,6 @@ client.on('connect', function (connection) {
   connection.send(JSON.stringify(msg));
 
   var msg = {
-    stream: "multimedia",
-    payload: {
-      action: "subscribe",
-      data: {
-        action: "create",
-      }
-    }
-  };
-
-  connection.send(JSON.stringify(msg));
-
-  var msg = {
     stream: "publication",
     payload: {
       action: "subscribe",
@@ -481,11 +470,35 @@ client.on('connect', function (connection) {
   connection.send(JSON.stringify(msg));
 
   var msg = {
+    stream: "multimedia",
+    payload: {
+      action: "subscribe",
+      data: {
+        action: "create",
+      }
+    }
+  };
+
+  connection.send(JSON.stringify(msg));
+
+  var msg = {
     stream: "comments",
     payload: {
       action: "subscribe",
       data: {
         action: "create",
+      }
+    }
+  };
+
+  connection.send(JSON.stringify(msg));
+
+  var msg = {
+    stream: "comments",
+    payload: {
+      action: "subscribe",
+      data: {
+        action: "update",
       }
     }
   };

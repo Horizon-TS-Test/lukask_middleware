@@ -23,7 +23,7 @@ router.post('/', function (req, res, next) {
       return res.status(responseCode).json({
         code: responseCode,
         title: "Action has been created successfully",
-        relevanceData: data
+        data: data
       });
     }
     return res.status(responseCode).json({

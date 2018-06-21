@@ -26,9 +26,9 @@ router.get('/', function (req, res, next) {
   let parentId = (req.query.pub_id) ? req.query.pub_id : req.query.com_id;
   let replies = (req.query.replies) ? req.query.replies : false;
   let limit = (req.query.limit) ? req.query.limit : null;
-  let pagePattern = (req.headers['page-pattern']) ? req.headers['page-pattern'] : null;
+  let offset = (req.query.offset) ? req.query.offset : null;
 
-  actionRestClient.getActions(commentType, parentId, replies, limit, pagePattern, token, function (responseCode, data) {
+  actionRestClient.getActions(commentType, parentId, replies, limit, offset, token, function (responseCode, data) {
     if (responseCode == 200) {
       return res.status(responseCode).json({
         code: responseCode,
@@ -59,7 +59,7 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
       return res.status(responseCode).json({
         code: responseCode,
         title: "Action has been created successfully",
-        comment: data
+        data: data
       });
     }
     return res.status(responseCode).json({
