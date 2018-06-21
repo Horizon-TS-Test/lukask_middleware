@@ -25,7 +25,7 @@ var postUser = function (user_id, body, file, token, callback) {
             }
             if (httpResponse.statusCode == 200) {
                 if (file) {
-                    console.log("Elimando archivo: " + file[i].path);
+                    console.log("Elimando archivo: " + file.path);
                     fs.unlink(file.path);
                 }
                 console.log('Publication has been created successfully, Server responded with: ', JSON.parse(data));
