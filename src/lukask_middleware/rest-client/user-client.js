@@ -9,11 +9,37 @@ var request = require('request');
 var fs = require("fs");
 ////////////////////////////////////////////////////////////
 
-var postUser = function (user_id, body, file, token, callback) {
+var getUserProfile = function (userId, token, callback) {
+    ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
+    var client = new Client();
+
+    //GET METHOD:
+    var args = {
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Token " + token
+        }
+    }
+
+    var get = client.get(restUrl.user + userId + "/", args, function (data, response) {
+        console.log(data);
+        callback(response.statusCode, data);
+    });
+
+    get.on("error", function (err) {
+        console.log(err);
+        callback(500, err);
+    });
+    ////
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+}
+
+var patchUser = function (userId, body, file, token, callback) {
     ////////////////////////////////// POST REQUEST //////////////////////////////////////
     var r = request.patch(
         {
-            url: restUrl.user + user_id + "/",
+            url: restUrl.user + userId + "/",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Authorization": "Token " + token
@@ -28,11 +54,11 @@ var postUser = function (user_id, body, file, token, callback) {
                     console.log("Elimando archivo: " + file.path);
                     fs.unlink(file.path);
                 }
-                console.log('Publication has been created successfully, Server responded with: ', JSON.parse(data));
+                console.log('User has been updted successfully, Server responded with: ', JSON.parse(data));
                 callback(httpResponse.statusCode, JSON.parse(data));
             }
             else {
-                console.log('Error while making todo post request: ', data);
+                console.log('Error while making user patch request: ', data);
                 callback(httpResponse.statusCode, data);
             }
         });
@@ -48,6 +74,7 @@ var postUser = function (user_id, body, file, token, callback) {
     form.append('person.telephone', body.telephone);
     form.append('person.address', body.address);
     form.append('is_active', body.is_active);
+
     if (file) {
         form.append("media_profile", fs.createReadStream(file.path), { filename: file.originalname, contentType: file.mimetype });
     }
@@ -55,5 +82,6 @@ var postUser = function (user_id, body, file, token, callback) {
 }
 
 module.exports = {
-    postUser: postUser,
+    getUserProfile,
+    patchUser: patchUser,
 }

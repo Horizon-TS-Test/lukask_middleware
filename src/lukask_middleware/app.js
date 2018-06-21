@@ -129,7 +129,6 @@ app.use(function (req, res, next) {
  */
 
 var midGetClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
-var midSetClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
 app.use(function (req, res, next) {
   //REF: https://stackoverflow.com/questions/12525928/how-to-get-request-path-with-express-req-object
   if (req.originalUrl.indexOf('login') === -1 && req.originalUrl.indexOf('logout') === -1) {
@@ -137,6 +136,7 @@ app.use(function (req, res, next) {
 
     let workerOrigin = req.headers['pass-key'];
     if (workerOrigin) {
+      console.log(workerOrigin);
       //IF THE SERVICE WORKER SENDS A BACKGROUND SYNC REQUEST:
       let listPromise = new Promise((resolve, reject) => {
         redisClient.keys("sess:*", function (error, keys) {
@@ -200,7 +200,6 @@ app.use(function (req, res, next) {
       }
 
       let localEncrypted = req.session.key.crypto_user_id;
-      //let userEncrypted = req.query.userId;
       if (!req.headers['x-access-token']) {
         return res.status(401).json({
           code: 401,
@@ -222,22 +221,6 @@ app.use(function (req, res, next) {
         });
       }
 
-      //REDIS SESSION TTL RESTARTING:
-      /*redisClient.keys("sess:*", function (error, keys) {
-        for (let key of keys) {
-          midGetClient.get(key, function (err, reply) {
-            let keyData = JSON.parse(reply);
-            if (keyData.key) {
-              if (keyData.key.crypto_user_id == req.session.key.crypto_user_id) {
-                //REF: https://dzone.com/articles/tutorial-working-nodejs-and
-                midSetClient.expire(key, def_exp_time);
-                midSetClient.expire(aux_prefij + key, exp_time);
-              }
-            }
-          });
-        }
-      });*/
-      ////
       next();
     }
   }
