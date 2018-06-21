@@ -13,12 +13,13 @@ router.post('/', function (req, res, next) {
   loginClient.responseLogin(user, password, function (responseCode, data) {
     if (responseCode == 200) {
       //GENERATING CRYPTO ID FOR USER SESSION:
-      let encrypted = cryptoGen.encrypt(user + "-" + Date.now());
+      let encryptedUserKey = cryptoGen.encrypt(user + "-" + Date.now());
+      let encryptedUserId = cryptoGen.encryptPass(data.user_id + "");
       ///////////////////////////////////////
 
       //CALLING TO OUR SESSION STORE INSTANCE:
       req.session.key = {
-        crypto_user_id: encrypted,
+        crypto_user_id: encryptedUserKey,
         token: data.token
       };
       ////////////////////////////////////////
@@ -26,8 +27,8 @@ router.post('/', function (req, res, next) {
         code: responseCode,
         title: "Successfully calling of login REST API method",
         data: {
-          user_id: encrypted,
-          user_profile: data.userprofile
+          user_key: encryptedUserKey,
+          user_id: encryptedUserId
         }
       });
     }
