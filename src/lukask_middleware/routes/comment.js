@@ -59,7 +59,7 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
       return res.status(responseCode).json({
         code: responseCode,
         title: "Action has been created successfully",
-        comment: data
+        data: data
       });
     }
     return res.status(responseCode).json({

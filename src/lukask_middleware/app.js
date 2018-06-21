@@ -168,7 +168,8 @@ app.use(function (req, res, next) {
                 resolve(true);
               }
             }).catch((err) => {
-              console.log("none");
+              console.log("[LUKASK MIDDLEWARE] No existe registro de sesión del cliente Service Worker");
+              reject(false);
             });
           }
         });

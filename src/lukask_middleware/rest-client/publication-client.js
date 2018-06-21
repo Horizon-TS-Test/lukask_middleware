@@ -130,6 +130,7 @@ var postPub = function (body, files, token, callback) {
     form.append('date_publication', body.date_publication);
     form.append('type_publication', body.type_publication);
     form.append('location', body.location);
+    form.append('address', body.address);
 
     if (files) {
         for (var i = 0; i < files.length; i++) {

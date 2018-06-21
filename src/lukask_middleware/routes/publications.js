@@ -83,7 +83,7 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
       return res.status(responseCode).json({
         code: responseCode,
         title: "Publication has been created successfully",
-        pub: data
+        data: data
       });
     }
     return res.status(responseCode).json({
