@@ -150,6 +150,7 @@ app.use(function (req, res, next) {
                 if (keyData.key) {
                   if (keyData.key.crypto_user_id == workerOrigin) {
                     req.session["key"] = {
+                      crypto_user_id: workerOrigin,
                       token: keyData.key.token
                     }
                     resolve(true);
@@ -198,6 +199,8 @@ app.use(function (req, res, next) {
           data: "You must be logged first."
         });
       }
+
+      console.log(req.session.key);
 
       let localEncrypted = req.session.key.crypto_user_id;
       if (!req.headers['x-access-token']) {
