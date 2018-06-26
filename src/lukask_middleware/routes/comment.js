@@ -4,7 +4,6 @@ var router = express.Router();
 var actionRestClient = require('./../rest-client/action-client');
 var actionTypes = require('./../const/action-types');
 
-var request = require('request');
 /////////////////////// FILE UPLOAD ////////////////////////
 var multer = require("multer");
 var upload = multer({ dest: 'tmp_uploads/' });
@@ -49,11 +48,14 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
   let commentType = actionTypes.comment;
   req.body.action_type = commentType;
 
-  console.log(req.body);
   actionRestClient.postAction(req.body, req.file, token, function (responseCode, data) {
-    if (responseCode == 201 || responseCode == 200) {
-      wepushClient.notify('Nuevo comentario registrado', req.body.description, '/inicio', function (resCode, commentData) {
-        console.log(resCode, commentData);
+    if (responseCode == 201) {
+      let title = 'Nuevo comentario registrado';
+      let content = (req.body.description.length > 100) ? req.body.description.substring(0, 100) : req.body.description;
+      let defaultUrl = '/?pubId=' + data.publication + ((data.action_parent) ? '&comId=' + data.action_parent + '&repId=' + data.id_action : '&comId=' + data.id_action);
+
+      wepushClient.notify(title, content, defaultUrl, null, function (resCode, notifData) {
+        console.log(resCode, notifData);
       });
 
       return res.status(responseCode).json({

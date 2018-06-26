@@ -4,8 +4,6 @@ var router = express.Router();
 var actionRestClient = require('./../rest-client/action-client');
 var actionTypes = require('./../const/action-types');
 
-var request = require('request');
-
 var wepushClient = require('./../rest-client/webpush-client');
 
 router.post('/', function (req, res, next) {

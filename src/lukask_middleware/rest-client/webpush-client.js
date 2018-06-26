@@ -1,7 +1,7 @@
 var webpush = require('./../config/push-api');
 var Client = require("node-rest-client").Client;
 
-var notify = function (title, content, open_url, callback) {
+var notify = function (title, content, open_url, actions, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
 
@@ -10,7 +10,8 @@ var notify = function (title, content, open_url, callback) {
         data: {
             "title": title,
             "content": content,
-            "open_url": open_url
+            "open_url": open_url,
+            "actions": actions
         },
         headers: {
             "Content-Type": "application/json",
