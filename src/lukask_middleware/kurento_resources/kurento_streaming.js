@@ -113,13 +113,6 @@ ws.on("connection", function(error){
                 break;
         }
     })
-
-
-
-
-
-
-
 });
 
 /**********************************************
@@ -127,7 +120,7 @@ ws.on("connection", function(error){
  **********************************************/
 
 /**
- * Proceso para agragar los candidatos a unirse a la trasmicion.
+ * Proceso para agragar los candidatos a unirse o comenzar con la transmición.
  */
 function onIceCandidate(sessionId, _candidate) {
 	console.log("obteniendo candidatos")
@@ -175,12 +168,12 @@ function getKurentoClient(callback){
 /**
  * Test de servidor.
  */
-getKurentoClient((error, kurentoClient) => {
-    if(error){
-        console.log(error);
-    }
-    generateKeyUser();
-});
+//getKurentoClient((error, kurentoClient) => {
+   // if(error){
+     //   console.log(error);
+    //}
+    //generateKeyUser();
+//});
 
 /**
  * Permite generar una clave unica, para identificadores de la transmicion.
@@ -320,7 +313,7 @@ function startViewer(sessionId, ws, sdpOffer, callback){
 
     if(presenter === null){
         stop(sessionId);
-        return callback(error);
+        return callback(noPresentTransmission);
     }
 
     presenter.pipeline.create('WebRtcEndpoint', function(error, webRtcEndpoint){
@@ -422,8 +415,6 @@ function stopTransmission(sessionId){
     } 
 
 }
-
-
 
 /**
  * Limpiar, candidatos.
