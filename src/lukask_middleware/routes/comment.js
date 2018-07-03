@@ -4,6 +4,7 @@ var router = express.Router();
 var actionRestClient = require('./../rest-client/action-client');
 var actionTypes = require('./../const/action-types');
 
+var notifRestClient = require('./../rest-client/notification-client');
 /////////////////////// FILE UPLOAD ////////////////////////
 var multer = require("multer");
 var upload = multer({ dest: 'tmp_uploads/' });
@@ -50,13 +51,33 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
 
   actionRestClient.postAction(req.body, req.file, token, function (responseCode, data) {
     if (responseCode == 201) {
-      let title = 'Nuevo comentario registrado';
-      let content = (req.body.description.length > 100) ? req.body.description.substring(0, 100) : req.body.description;
-      let defaultUrl = '/?pubId=' + data.publication + ((data.action_parent) ? '&comId=' + data.action_parent + '&repId=' + data.id_action : '&comId=' + data.id_action);
+      let userNotif = JSON.parse(data.receivers);
 
-      wepushClient.notify(title, content, defaultUrl, null, function (resCode, notifData) {
-        console.log(resCode, notifData);
-      });
+      if (userNotif.length > 0) {
+        let receivers = [];
+        let title = 'Nuevo comentario registrado';
+        let content = (req.body.description.length > 100) ? req.body.description.substring(0, 100) + "..." : req.body.description;
+        let defaultUrl = '/?pubId=' + data.publication + ((data.action_parent) ? '&comId=' + data.action_parent + '&repId=' + data.id_action : '&comId=' + data.id_action);
+
+        for (let user of userNotif) {
+          receivers[receivers.length] = {
+            user_id: user.fields.user_register,
+            title: title,
+            pushContent: content,
+            content: content,
+            open_url: defaultUrl,
+            actions: null
+          }
+        }
+
+        notifRestClient.postNotifications(title, req.body.date, defaultUrl, receivers, token, function (notCode, notData) {
+          console.log(notCode, notData);
+        });
+
+        wepushClient.notify(receivers, function (resCode, notifData) {
+          console.log(resCode, notifData);
+        });
+      }
 
       return res.status(responseCode).json({
         code: responseCode,

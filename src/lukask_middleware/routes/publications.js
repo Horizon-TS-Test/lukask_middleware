@@ -76,7 +76,7 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
 
   publicationRestClient.postPub(req.body, req.files, token, function (responseCode, data) {
     if (responseCode == 201) {
-      let title = 'Nueva publicación registrada';
+      /*let title = 'Nueva publicación registrada';
       let content = (req.body.detail.length > 100) ? req.body.detail.substring(0, 100) : req.body.detail;
       let defaultUrl = '/';
       let queryParam = data.id_publication;
@@ -98,7 +98,7 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
         code: responseCode,
         title: "Publication has been created successfully",
         data: data
-      });
+      });*/
     }
     return res.status(responseCode).json({
       code: responseCode,
