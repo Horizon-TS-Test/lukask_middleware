@@ -1,15 +1,21 @@
+
+"use strict";
 /*****************************
  *********** Imports *********
  *****************************/
 var path            = require('path');
-var url             = require('url');
+//var url             = require('url');
 var minimist        = require('minimist');
-var ws              = require('ws');
+//var ws              = require('ws');
 var express         = require('express');
+var http            = require('http');
 var fs              = require('fs');
 var kurentoServerWs = require('../config/kurento-server').kurentoServer_url_ws
 var cryptoGenerate  = require('../tools/crypto-generator');
 var kurentoClientLib  = require('kurento-client');
+var WebSocket = require('ws').Server;
+//var as  = require('express-ws');
+
 
 /*****************************
  ***** Global varibles *******
@@ -24,24 +30,28 @@ var noPresentTransmission = "Aun no existe ninguna transmici\u00f3n en linia, in
 /***
  * Se procede a iniciar el servidor socket
  */
-var server  = require('../app').server;
-var app     = require('../app').app;
-var ws      = new ws.Server({
-    server : server,
-    path   : '/lukask_streaming' 
-});
+var app     = express();
+var server  = http.createServer(app);
+server.listen(8080);
 
+//Conectamos con los servidores.
 var argv = minimist(process.argv.slice(2), {
     default: {
-        as_uri: 'http://localhost:8443/',
+        as_uri: '',
         ws_uri: kurentoServerWs
     }
 });
 
+// Inicailizamos el socket
+var  wss = new WebSocket({
+    server : server,
+    path : '/lukaskstreaming'
+}); 
+
 /**********************************************
  ********* Acciones  con el socket *************** 
  **********************************************/
-ws.on("connection", function(error){
+wss.on("connection", function(ws){
     
     //generamos clave unica
     var sessionId = nextUniqueId();
@@ -53,22 +63,24 @@ ws.on("connection", function(error){
         stopTransmission(sessionId);
     });
 
-    //En caso de cerrar la conexion del ws
+    //En caso de cerrar la conexion del wss
     ws.on("close", function(){
         console.log("conexion cerrada para la secion: " + sessionId)
         stopTransmission(sessionId);
     });
 
     //Escucha las acciones enviadas desde el cliente.
-    ws.on("message", function(_message){
+    ws.on('message', function(_message){
         let message = JSON.parse(_message);
         console.log("Mensaje recibido: " + message + " para la session: " + sessionId);
 
         switch(message.keyWord){
             case 'presenter' :
                 startPresenter(sessionId, ws, message.sdpOffer, function(error, sdpAnswer){
+                    console.log("error", error);
+                    console.log("sdpAnswer", sdpAnswer)
                     if(error){
-                        return ws.send(JSON.stringify({
+                        return wss.send(JSON.stringify({
                             keyWord : 'presenterResponse',
                             response : 'rejected',
                             message : error
@@ -78,7 +90,7 @@ ws.on("connection", function(error){
                     ws.send(JSON.stringify({
                         keyWord : 'presenterResponse',
                         response : 'accepted',
-                        message : sdpAnswer
+                        sdpAnswer : sdpAnswer
                     }));
                 });
                 break;
@@ -123,8 +135,8 @@ ws.on("connection", function(error){
  * Proceso para agragar los candidatos a unirse o comenzar con la transmición.
  */
 function onIceCandidate(sessionId, _candidate) {
-	console.log("obteniendo candidatos")
-    var candidate = kurento.getComplexType('IceCandidate')(_candidate);
+	console.log("obteniendo candidatos", _candidate)
+    var candidate = kurentoClientLib.getComplexType('IceCandidate')(_candidate);
 
     if (presenter && presenter.id === sessionId && presenter.webRtcEndpoint) {
         console.info('Sending presenter candidate');
@@ -168,12 +180,12 @@ function getKurentoClient(callback){
 /**
  * Test de servidor.
  */
-//getKurentoClient((error, kurentoClient) => {
-   // if(error){
-     //   console.log(error);
-    //}
-    //generateKeyUser();
-//});
+/*getKurentoClient((error, kurentoClient) => {
+    if(error){
+        console.log(error);
+    }
+    generateKeyUser();
+});*/
 
 /**
  * Permite generar una clave unica, para identificadores de la transmicion.
@@ -190,7 +202,7 @@ function generateKeyUser(){
     }
 
     //Encripta la clave
-    keyUser = cryptoGenerate.encrypt(keyWord);
+    var keyUser = cryptoGenerate.encrypt(keyWord);
     console.log("Id de user encriptado", keyUser)
     return keyUser;
 }
@@ -198,11 +210,11 @@ function generateKeyUser(){
 /**
  * Proceso para generar la transmicion. 
  * @param {string} sessionId 
- * @param {string} ws 
+ * @param {string} wss 
  * @param {string} sdpOffer 
  * @param {function} callback 
  */
-function startPresenter(sessionId, ws, sdpOffer, callback){
+function startPresenter(sessionId, wss, sdpOffer, callback){
     clearCandidatesQueue(sessionId);
 
     if(presenter !== null){
@@ -232,7 +244,7 @@ function startPresenter(sessionId, ws, sdpOffer, callback){
         }
 
         //Se procede a crear el proceso de transmcion.
-        kurentoClientLib.create("MediaPipeline", function(error, pipeline){
+        kurentoClient.create("MediaPipeline", function(error, pipeline){
             if(error){
                 stop(sessionId);
                 return callback(error);
@@ -267,8 +279,8 @@ function startPresenter(sessionId, ws, sdpOffer, callback){
 
                 //Obtenemos, los datos del candidato a transmicion.
                 webRtcEndpoint.on("OnIceCandidate", function(event){
-                    var candidato = kurentoClient.getComplexType('IceCandidate')(event.candidate);
-                    ws.send(JSON.stringify({
+                    var candidate = kurentoClientLib.getComplexType('IceCandidate')(event.candidate);
+                    wss.send(JSON.stringify({
                         id : 'iceCandidate',
                         candidate : candidate
                     }));
@@ -289,7 +301,7 @@ function startPresenter(sessionId, ws, sdpOffer, callback){
                 });
 
                 //Verificamos, errores
-                webRtcEndpoint.getherCandidates(function(error){
+                webRtcEndpoint.gatherCandidates(function(error){
                     if (error){
                         stop(sessionId);
                         return callback(error);
@@ -303,11 +315,11 @@ function startPresenter(sessionId, ws, sdpOffer, callback){
 /**
  * Proceso para presetar la transmicion a un viewer.
  * @param {*} sessionId 
- * @param {*} ws 
+ * @param {*} wss 
  * @param {*} sdpOffer 
  * @param {*} callback 
  */
-function startViewer(sessionId, ws, sdpOffer, callback){
+function startViewer(sessionId, wss, sdpOffer, callback){
     
     clearCandidatesQueue(sessionId);
 
@@ -324,7 +336,7 @@ function startViewer(sessionId, ws, sdpOffer, callback){
         
         viewers[sessionId] = {
             "webRtcEndpoint" : webRtcEndpoint,
-            "ws" : ws
+            "wss" : wss
         }
 
         if (presenter == null){
@@ -340,8 +352,8 @@ function startViewer(sessionId, ws, sdpOffer, callback){
         }
 
         webRtcEndpoint.on('OneIceCandidate', function(event){
-            var cantidate = kurentoClient.getComplexType("IceCandidate")(event.candidate)
-            ws.send(JSON.stringify({
+            var candidate = kurentoClientLib.getComplexType("IceCandidate")(event.candidate)
+            wss.send(JSON.stringify({
                 id : 'iceCandidate',
                 candidate : candidate
             }));
@@ -368,7 +380,7 @@ function startViewer(sessionId, ws, sdpOffer, callback){
                     return callback(noPresentTransmission);
                 }
                 callback(null, sdpAnswer);
-                webRtcEndpoint.getherCandidates(function(){
+                webRtcEndpoint.gatherCandidates(function(error){
                     if(error){
                         stop(sessionId)
                         return callback(error)
@@ -433,7 +445,4 @@ function nextUniqueId() {
 	idCounter++;
 	return idCounter.toString();
 }
-
-console.log("que es esto amigos......................", express.static(path.join(__dirname, 'static')))
-app.use(express.static(path.join(__dirname, 'static')));
 
