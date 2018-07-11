@@ -26,6 +26,7 @@ var candidatesQueue = {};
 var presenter       = null;
 var viewers         = [];
 var noPresentTransmission = "Aun no existe ninguna transmici\u00f3n en linia, intentelo mas tarde";
+var presenters      = [];
 
 /***
  * Se procede a iniciar el servidor socket
@@ -49,7 +50,7 @@ var  wss = new WebSocket({
 }); 
 
 /**********************************************
- ********* Acciones  con el socket *************** 
+ ********* Acciones  con el socket ************ 
  **********************************************/
 wss.on("connection", function(ws){
     
@@ -72,15 +73,13 @@ wss.on("connection", function(ws){
     //Escucha las acciones enviadas desde el cliente.
     ws.on('message', function(_message){
         let message = JSON.parse(_message);
-        console.log("Mensaje recibido: " + message + " para la session: " + sessionId);
+        console.log("Mensaje recibido: " + message.userId + " para la session: " + sessionId);
 
         switch(message.keyWord){
             case 'presenter' :
-                startPresenter(sessionId, ws, message.sdpOffer, function(error, sdpAnswer){
-                    console.log("error", error);
-                    console.log("sdpAnswer", sdpAnswer)
+                startPresenter(sessionId, ws, message.sdpOffer, message.userId, function(error, sdpAnswer){
                     if(error){
-                        return wss.send(JSON.stringify({
+                        return ws.send(JSON.stringify({
                             keyWord : 'presenterResponse',
                             response : 'rejected',
                             message : error
@@ -95,7 +94,7 @@ wss.on("connection", function(ws){
                 });
                 break;
             case 'viewer':
-                startViewer(sessionId, ws, message.sdpOffer, function(error, sdpAnswer){
+                startViewer(sessionId, ws, message.sdpOffer, message.idOwnerTrans, function(error, sdpAnswer){
                     if(error){
                         return ws.send(JSON.stringify({
                             keyWord : 'viewerResponse',
@@ -107,12 +106,12 @@ wss.on("connection", function(ws){
                     ws.send(JSON.stringify({
                         keyWord : 'viewerResponse', 
                         response : 'accepted',
-                        message : sdpAnswer
+                        sdpAnswer : sdpAnswer
                     }));
                 });
                 break;
             case 'stop':
-                stopTransmission(sessionId);
+                stopTransmission(sessionId, message.idUser);
                 break;
             case 'onIceCandidate':
                 onIceCandidate(sessionId, message.candidate)
@@ -214,44 +213,58 @@ function generateKeyUser(){
  * @param {string} sdpOffer 
  * @param {function} callback 
  */
-function startPresenter(sessionId, wss, sdpOffer, callback){
+function startPresenter(sessionId, wss, sdpOffer, userId, callback){
+    
     clearCandidatesQueue(sessionId);
-
-    if(presenter !== null){
-        stop(sessionId);
+    /*if(presenter !== null){
+        stopTransmission(sessionId);
         return callback("Otro usuario ya se encuentra transmitiendo, intentelo mas tarde");
+    }*/
+
+    console.log("array Presenters", presenters);
+    if(presenters.length > 0){
+       for (var item in presenters){
+            if (presenters[item].userId === userId){
+                stopTransmission(sessionId);
+                return callback("Este usuario ya se encuentra realizando una transmici\u00f3n");
+            }
+       }
     }
 
+    //Inicalizamos el presenter
     presenter = {
         id : sessionId,
+        userId: userId,
         pipeline : null,
         webRtcEndpoint : null
     }
-    
+    presenters.push(presenter);
+    console.log("datos del presenter", presenters);
+
     //Obtenermos el cliente de kurento.
     getKurentoClient(function(error, _kurentoClient){
         
         //Verificamos si existe algun error
         if(error){
-            stop(sessionId);
+            stopTransmission(sessionId);
             return callback(error)
         }
 
         //Verificamos que exista ya asignado un candidato para transmitir.
         if(presenter == null){
-            stop(sessionId);
+            stopTransmission(sessionId);
             return callback(noPresentTransmission)
         }
 
         //Se procede a crear el proceso de transmcion.
         kurentoClient.create("MediaPipeline", function(error, pipeline){
             if(error){
-                stop(sessionId);
+                stopTransmission(sessionId);
                 return callback(error);
             }
 
             if(presenter === null){
-                stop(sessionId);
+                stopTransmission(sessionId);
                 return callback(noPresentTransmission)
             }
 
@@ -259,11 +272,11 @@ function startPresenter(sessionId, wss, sdpOffer, callback){
             presenter.pipeline = pipeline;
             pipeline.create('WebRtcEndpoint', function(error, webRtcEndpoint){
                 if(error){
-                    stop(sessionId);
+                    stopTransmission(sessionId);
                     return callback(error)
                 }
                 if(presenter === null){
-                    stop(sessionId);
+                    stopTransmission(sessionId);
                     return callback(noPresentTransmission)
                 }
 
@@ -281,7 +294,7 @@ function startPresenter(sessionId, wss, sdpOffer, callback){
                 webRtcEndpoint.on("OnIceCandidate", function(event){
                     var candidate = kurentoClientLib.getComplexType('IceCandidate')(event.candidate);
                     wss.send(JSON.stringify({
-                        id : 'iceCandidate',
+                        keyWord : 'iceCandidate',
                         candidate : candidate
                     }));
                 });
@@ -289,11 +302,11 @@ function startPresenter(sessionId, wss, sdpOffer, callback){
                 //Proceso de seteo de datos ofertantes. 
                 webRtcEndpoint.processOffer(sdpOffer, function(error, sdpAnswer){
                     if (error){
-                        stop(sessionId);
+                        stopTransmission(sessionId);
                         return callback(error);
                     }
                     if(presenter === null){
-                        stop(sessionId);
+                        stopTransmission(sessionId);
                         return callback(noPresentTransmission)
                     }
 
@@ -303,7 +316,7 @@ function startPresenter(sessionId, wss, sdpOffer, callback){
                 //Verificamos, errores
                 webRtcEndpoint.gatherCandidates(function(error){
                     if (error){
-                        stop(sessionId);
+                        stopTransmission(sessionId);
                         return callback(error);
                     }
                 });
@@ -319,28 +332,30 @@ function startPresenter(sessionId, wss, sdpOffer, callback){
  * @param {*} sdpOffer 
  * @param {*} callback 
  */
-function startViewer(sessionId, wss, sdpOffer, callback){
-    
+function startViewer(sessionId, wss, sdpOffer, idOwnerTrans, callback){
+    console.log("Entro a al viewer");
     clearCandidatesQueue(sessionId);
-
+    presenter = getPresenter(idOwnerTrans);
+    console.log("presenterTemp", presenter);
     if(presenter === null){
-        stop(sessionId);
+        stopTransmission(sessionId);
         return callback(noPresentTransmission);
     }
 
     presenter.pipeline.create('WebRtcEndpoint', function(error, webRtcEndpoint){
         if(error){
-            stop(sessionId);
+            stopTransmission(sessionId, idOwnerTrans);
             return callback(error)
         }
         
         viewers[sessionId] = {
             "webRtcEndpoint" : webRtcEndpoint,
-            "wss" : wss
+            "ws" : wss,
+            "idOwnerTrans": idOwnerTrans
         }
 
         if (presenter == null){
-            stop(sessionId);
+            stopTransmission(sessionId, idOwnerTrans);
             return callback(noPresentTransmission);
         }
 
@@ -351,38 +366,38 @@ function startViewer(sessionId, wss, sdpOffer, callback){
             }
         }
 
-        webRtcEndpoint.on('OneIceCandidate', function(event){
+        webRtcEndpoint.on('OnIceCandidate', function(event){
             var candidate = kurentoClientLib.getComplexType("IceCandidate")(event.candidate)
             wss.send(JSON.stringify({
-                id : 'iceCandidate',
+                keyWord : 'iceCandidate',
                 candidate : candidate
             }));
         });
 
         webRtcEndpoint.processOffer(sdpOffer, function(error, sdpAnswer){
             if(error){
-                stop(sessionId);
+                stopTransmission(sessionId, idOwnerTrans);
                 return callback(error);
             }
 
             if(presenter === null){
-                stop(sessionId);
+                stopTransmission(sessionId, idOwnerTrans);
                 return callback(noPresentTransmission)
             }
 
             presenter.webRtcEndpoint.connect(webRtcEndpoint, function(error){
                 if (error){
-                    stop(sessionId);
+                    stopTransmission(sessionId);
                     return callback(error);
                 }
                 if(presenter === null){
-                    stop(sessionId);
+                    stopTransmission(sessionId, idOwnerTrans);
                     return callback(noPresentTransmission);
                 }
                 callback(null, sdpAnswer);
                 webRtcEndpoint.gatherCandidates(function(error){
                     if(error){
-                        stop(sessionId)
+                        stopTransmission(sessionId, idOwnerTrans);
                         return callback(error)
                     }
                 });
@@ -396,35 +411,41 @@ function startViewer(sessionId, wss, sdpOffer, callback){
  * Detiene la transmición, dado el identificador de sesion.
  * @param {string} sessionId  secion actual
  */
-function stopTransmission(sessionId){
-    
-    console.log("Se procede a detener la transmicion para la sesion: ", sessionId);
-    clearCandidatesQueue(sessionId);
-    if (viewers.length < 1 && !presenter) {
+function stopTransmission(sessionId, idOwnerTrans){
+
+    console.log("Id a detener", idOwnerTrans)
+    if (viewers.length < 1 && presenters.length === 1) {
+        presenters = [];
 		console.log('Closing kurento client');
 		if(kurentoClient !== null){
 			kurentoClient.close();
 			kurentoClient = null;
 		}
     }
-
-    if(presenter != null && presenter.id == sessionId){
+    
+    presenter = getPresenter(idOwnerTrans);
+    if(presenter != null){
+        console.log("entro a terminar la transmicion en los clientes")
         for (var i in viewers) {
-			var viewer = viewers[i];
-			if (viewer.ws) {
+            var viewer = viewers[i];
+            console.log("viewer......", viewer);
+			if (viewer.ws && viewer.idOwnerTrans === presenter.userId) {
 				viewer.ws.send(JSON.stringify({
-					id : 'stopCommunication'
+					keyWord : 'stopCommunication'
 				}));
 			}
 		}
 		presenter.pipeline.release();
-		presenter = null;
+        presenter = null;
+        deletePresenter(idOwnerTrans);
 		viewers = [];
 
     } else if(viewers[sessionId]){
         viewers[sessionId].webRtcEndpoint.release();
         delete viewers[sessionId];
     } 
+
+    clearCandidatesQueue(sessionId);
 
 }
 
@@ -445,4 +466,36 @@ function nextUniqueId() {
 	idCounter++;
 	return idCounter.toString();
 }
+
+/**
+ * Obtenemos el emisor de la transmmicion.
+ * @param {number} idPresenter 
+ */
+function getPresenter(idPresenter){
+
+    for(var itemP in presenters){
+        if(presenters[itemP].userId == idPresenter){
+            return presenters[itemP];
+        }
+    }
+    return null;
+}
+
+/**
+ * Proceso de para eliminar emisores.
+ * @param {number} idOwnerTrans 
+ */
+function deletePresenter(idOwnerTrans){
+    var itemPresen = null;
+    for(var itemP in presenter){
+        if(presenters[itemP].userId === idOwnerTrans){
+            itemPresen = itemP;
+            break;
+        }
+    }
+    if(itemPresen != null){
+        delete presenters[itemPresen];
+    }
+}
+
 
