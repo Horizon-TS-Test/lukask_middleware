@@ -43,6 +43,27 @@ router.get('/exitoso', function (req, res, next) {
   });
 });
 
+//Get del Cancelado
+router.get('/cancelado', function (req, res, next) {
+  let body = req.body;
+  let token = req.session.key.token;
+  paymentRestClient.getCancelado(body,token,function (responseCode, data) {
+    if (responseCode == 200) {
+      return res.status(responseCode).json({
+        code: responseCode,
+        title: "Cancelado",
+        data: data
+      });
+      console.log("data..............", data);
+    }
+    return res.status(responseCode).json({
+      code: responseCode,
+      title: "An error has occurred",
+      error: data
+    });
+  });
+});
+
 //Post del Pago
 router.post('/pay', function (req, res, next) {
   let token = req.session.key.token;
@@ -65,6 +86,7 @@ router.post('/pay', function (req, res, next) {
 //Post de la Tarjeta
 router.post('/card', function (req, res, next) {
   let token = req.session.key.token;
+  console.log("Cuerpo", req.body);
   paymentRestClient.postCards(req.body, token, function (responseCode, data) {
     if (responseCode == 200) {
       return res.status(responseCode).json({

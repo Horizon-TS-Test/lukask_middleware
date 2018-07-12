@@ -3,7 +3,7 @@ var Planilla = require('./../models/panillas');
 var Client = require("node-rest-client").Client;
 //Post para el servicio
 
-var Request = require("request");
+var request = require("request");
 
 
 //Listar Planillas
@@ -67,49 +67,68 @@ var getExitoso = function (body, token, callback) {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 };
 
+//Ruta no fue un exito
+var getCancelado = function (body, token, callback) {
+
+    var args = {
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Token " + token
+        }
+    }
+
+    get = client.get(restUrl.cancelado, args, function (data, response) {
+        if (data.next) {
+            data.next = data.next.substring(data.next.indexOf("?"));
+        }
+        console.log(data);
+        callback(response.statusCode, data);
+    });
+
+    get.on("error", function (err) {
+        console.log(err);
+        callback(500, err.code);
+    });
+    ////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+};
+
 
 //POST PARA EL METODO DE RUBY
 var postPay = function (body, token, callback) {
     //Cuerpo que vamos a enviar///////
     console.log("Bodyyyyyyyyy post pay", body);
     var create_payment_json = {
-        "shopping_id": "",
+        "shopping_id": 1,
         "total": 1 * 100,
         "items": [{
-            "name": "Back End",
-            "sku": "item",
+            "name": "PAGO DEL SERVICIO " + body.empresa + "",
+            "sku": body.factura,
             "price": 1,
             "currency": "USD",
             "quantity": 1
         }],
-        "return_url": "http://localhost:3001/exitoso",
-        "cancel_url": "http://localhost:3001/carrito"
+        "return_url": "http://192.168.1.42:3000/exitoso",
+        "cancel_url": "http://192.168.1.42:3000/cancelado"
     };
     /////////////////////////////////
 
-    /////Ver los productos que tenemos a pagar//////
-    var band = 0;
-    var lista = req.session.cart.items;
-    for (i in lista) {
-        var item = {
-            "name": lista[i].item.titulo,
-            "sku": lista[i].item._id,
-            "price": lista[i].item.precio,
-            "currency": "USD",
-            "quantity": lista[i].qty
-        };
-        create_payment_json.items[ban] = item;
-        ban++;
-    }
+    console.log("Dato para enviar", create_payment_json);
     ///////////////////////////////////////////////
-    //Consumo del Post
+    //Consumo del Post de la Patty
     var pay = request.post({
         url: restUrl.pay,
         headers: {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux i686; rv:7.0.1) Gecko/20100101 Firefox/7.0.1',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-us,en;q=0.5',
             'Authorization': '[{"key":"Authorization","value":"' + token + '","description":""}]',
-            "Content-Type": "application/json",
+            'Accept-Encoding': 'gzip, deflate',
+            'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+            'Content-Type': 'application/json',
+            'Cache-Control': 'max-age=0'
         },
-        method: 'POST',
+        method: 'post',
         data: JSON.stringify(create_payment_json)
     }, function optionalCallback(err, httpResponse, data) {
         if (err) {
@@ -132,6 +151,7 @@ var postPay = function (body, token, callback) {
     form.append('total', body.data.total);
     form.append('fecha', body.data.created_at);
     form.append('address', body.address);
+    console.log("Pepepepepepep", form);
 };
 
 
@@ -142,45 +162,42 @@ var postCards = function (body, token, callback) {
     //Cuerpo que vamos a enviar///////
     console.log("Bodyyyyyyyyy post pay", body);
     //Creacion del cuerpo Json Para enviar
-  var ban = 0;
-  var create_card_json = {
-    "shopping_id": "",
-    "tarjeta": {
-      "email": body.email,
-      "number": body.card,
-      "expire_month": mes,
-      "expire_year": anio,
-      "cvv2": req.body.cvv
-    },
-    "productos": {
-      "total": req.session.cart.totalPrecio * 100,
-      "items":
-        [
-          {
-            "name": "Back End",
-            "sku": "item",
-            "price": 1,
-            "currency": "USD",
-            "quantity": 1
-          }
-        ],
-      "return_url": "http://localhost:3001/exitoso",
-      "cancel_url": "http://localhost:3001/carrito"
-    }
-  };
-
-  var lista = req.session.cart.items;
-  for (i in lista) {
-    var item = {
-      "name": lista[i].item.titulo,
-      "sku": lista[i].item._id,
-      "price": lista[i].item.precio,
-      "currency": "USD",
-      "quantity": lista[i].qty
+    var ban = 0;
+    var create_card_json = {
+        "shopping_id": "",
+        "tarjeta": {
+            "email": body.email,
+            "number": body.card,
+            "expire_month": mes,
+            "expire_year": anio,
+            "cvv2": req.body.cvv
+        },
+        "productos": {
+            "total": req.session.cart.totalPrecio * 100,
+            "items": [{
+                "name": "Back End",
+                "sku": "item",
+                "price": 1,
+                "currency": "USD",
+                "quantity": 1
+            }],
+            "return_url": "http://192.168.1.20:3000/exitoso",
+            "cancel_url": "http://192.168.1.20:3000/cancelado"
+        }
     };
-    create_card_json.productos.items[ban] = item;
-    ban++;
-  }
+
+    var lista = req.session.cart.items;
+    for (i in lista) {
+        var item = {
+            "name": lista[i].item.titulo,
+            "sku": lista[i].item._id,
+            "price": lista[i].item.precio,
+            "currency": "USD",
+            "quantity": lista[i].qty
+        };
+        create_card_json.productos.items[ban] = item;
+        ban++;
+    }
     ///////////////////////////////////////////////
     //Consumo del Post
     var pay = request.post({
@@ -218,7 +235,6 @@ module.exports = {
     getBills: getBills,
     getExitoso: getExitoso,
     postPay: postPay,
-    postCards: postCards
-
-
+    postCards: postCards,
+    getCancelado: getCancelado
 }
