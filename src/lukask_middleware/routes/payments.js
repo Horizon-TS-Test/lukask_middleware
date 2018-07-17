@@ -68,6 +68,7 @@ router.get('/cancelado', function (req, res, next) {
 router.post('/pay', function (req, res, next) {
   let token = req.session.key.token;
   paymentRestClient.postPay(req.body, token, function (responseCode, data) {
+    console.log("Que mismo", data);
     if (responseCode == 200) {
       return res.status(responseCode).json({
         code: responseCode,

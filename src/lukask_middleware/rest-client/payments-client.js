@@ -97,61 +97,39 @@ var getCancelado = function (body, token, callback) {
 //POST PARA EL METODO DE RUBY
 var postPay = function (body, token, callback) {
     //Cuerpo que vamos a enviar///////
-    console.log("Bodyyyyyyyyy post pay", body);
-    var create_payment_json = {
-        "shopping_id": 1,
-        "total": 1 * 100,
-        "items": [{
-            "name": "PAGO DEL SERVICIO " + body.empresa + "",
-            "sku": body.factura,
-            "price": 1,
-            "currency": "USD",
-            "quantity": 1
-        }],
-        "return_url": "http://192.168.1.42:3000/exitoso",
-        "cancel_url": "http://192.168.1.42:3000/cancelado"
-    };
+    var client = new Client();
     /////////////////////////////////
-
-    console.log("Dato para enviar", create_payment_json);
-    ///////////////////////////////////////////////
-    //Consumo del Post de la Patty
-    var pay = request.post({
-        url: restUrl.pay,
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (X11; Linux i686; rv:7.0.1) Gecko/20100101 Firefox/7.0.1',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-us,en;q=0.5',
-            'Authorization': '[{"key":"Authorization","value":"' + token + '","description":""}]',
-            'Accept-Encoding': 'gzip, deflate',
-            'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
-            'Content-Type': 'application/json',
-            'Cache-Control': 'max-age=0'
+    //POST METHOD:
+    var args = {
+        data: {
+            "shopping_id": 1,
+            "total": 1 * 100,
+            "items": [{
+                "name": "PAGO DEL SERVICIO " + body.empresa + "",
+                "sku": body.factura,
+                "price": 1,
+                "currency": "USD",
+                "quantity": 1
+            }],
+            "return_url": "http://192.168.1.42:3000/exitoso",
+            "cancel_url": "http://192.168.1.42:3000/cancelado"
         },
-        method: 'post',
-        data: JSON.stringify(create_payment_json)
-    }, function optionalCallback(err, httpResponse, data) {
-        if (err) {
-            console.log('Error while making todo post request: ', err);
-            callback(httpResponse.statusCode, err);
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Token " + token
         }
-        if (httpResponse.statusCode == 200) {
-            console.log('Ingreso a la pagina de PayPal successfully, Server responded with: ', JSON.parse(data));
-            callback(httpResponse.statusCode, JSON.parse(data));
-        } else {
-            console.log('Error while making todo post request: ', data);
-            callback(httpResponse.statusCode, data);
-        }
+    }
+
+    var post = client.post(restUrl.pay, args, function (data, response) {
+        callback(response.statusCode, data);
     });
-    var form = pay.form();
-    form.append('message', body.message);
-    form.append('idpago', body.data.id);
-    form.append('email', body.data.email);
-    form.append('paypal_id', body.data.paypal_id);
-    form.append('total', body.data.total);
-    form.append('fecha', body.data.created_at);
-    form.append('address', body.address);
-    console.log("Pepepepepepep", form);
+
+    post.on("error", function (err) {
+        callback(500, err.code);
+    });
+    ////
+
+    ///////////////////////////////////////////////
 };
 
 
