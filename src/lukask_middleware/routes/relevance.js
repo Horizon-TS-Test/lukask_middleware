@@ -8,7 +8,7 @@ var wepushClient = require('./../rest-client/webpush-client');
 
 router.post('/', function (req, res, next) {
   let token = req.session.key.token;
-  let relevanceType = actionTypes.relevant;
+  let relevanceType = actionTypes.relevance;
   req.body.action_type = relevanceType;
 
   console.log(req.body);
