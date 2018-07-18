@@ -138,7 +138,7 @@ app.use(function (req, res, next) {
 var midGetClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
 app.use(function (req, res, next) {
   //REF: https://stackoverflow.com/questions/12525928/how-to-get-request-path-with-express-req-object
-  if (req.originalUrl.indexOf('login') === -1 && req.originalUrl.indexOf('logout') === -1) {
+  if (req.originalUrl.indexOf('login') === -1 && req.originalUrl.indexOf('logout') === -1 && req.originalUrl.indexOf('exitoso') === -1) {
     console.log("Express sessions controling middleware");
 
     let workerOrigin = req.headers['pass-key'];

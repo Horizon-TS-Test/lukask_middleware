@@ -4,5 +4,7 @@ module.exports = {
     quejaType: 'http://192.168.1.56:8081/lukask-api/typePub/',
     login: 'http://192.168.1.56:8081/lukask-api/login/',
     user: 'http://192.168.1.56:8081/lukask-api/userProfile/',
-    pay: 'http://192.168.1.22:3000/pagar'
+    pay: 'http://192.168.1.22:3000/pagar',
+    exitoso:'http://192.168.1.42:3001/payment/exitoso',
+    checkout:'http://192.168.1.22:3000'
 }

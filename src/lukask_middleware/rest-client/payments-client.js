@@ -5,44 +5,13 @@ var Client = require("node-rest-client").Client;
 
 var request = require("request");
 
-
-//Listar Planillas
-var getBills = function (callback) {
-    ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
-    var client = new Client();
-    Planilla.find({}, function (err, docs) {
-        var tamaño = docs.length;
-        var planillaPedazo = [];
-        var Pedazos = 1;
-        //Crear la nueva matriz de los datos
-        for (var i = 0; i < tamaño; i += Pedazos) {
-            planillaPedazo.push(docs.slice(i));
-            i = tamaño + Pedazos;
-        }
-    });
-    console.log("datos de la planilla", planillaPedazo);
-
-    var get = client.get(planillaPedazo, function (data, response) {
-        //console.log(data);
-        callback(response.statusCode, data);
-    });
-
-    get.on("error", function (err) {
-        console.log(err);
-        callback(500, err);
-    });
-    ////
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////
-};
-
 //Ruta si fue un exito
-var getExitoso = function (body, token, callback) {
-    ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
+var getExitoso = function (parametros, token, callback) {
+    console.log("Ingreso al exitoso",parametros);
     var client = new Client();
-    const payerId = body.query.PayerId;
-    const paymentId = body.query.paymentId;
-    var get;
+    var payerID = parametros.params.PayerID;
+    var paymentId =parametros.params.paymentId;
+    
     //GET METHOD:
     var args = {
         headers: {
@@ -50,12 +19,9 @@ var getExitoso = function (body, token, callback) {
             "Authorization": "Token " + token
         }
     }
+    console.log("Che", restUrl.checkout + '/checkout?paymentId=' + paymentId + '&token=' + token + '&PayerID=' + payerID + '');
 
-    get = client.get(restUrl.checkout + '/checkout?paymentId=' + paymentId + '&token=' + token + '&PayerID=' + payerId + '', args, function (data, response) {
-        if (data.next) {
-            data.next = data.next.substring(data.next.indexOf("?"));
-        }
-        console.log(data);
+     var get = client.get(restUrl.checkout + '/checkout?paymentId=' + paymentId + '&token=' + token + '&PayerID=' + payerID + '',function (data, response) {
         callback(response.statusCode, data);
     });
 
@@ -78,9 +44,6 @@ var getCancelado = function (body, token, callback) {
     }
 
     get = client.get(restUrl.cancelado, args, function (data, response) {
-        if (data.next) {
-            data.next = data.next.substring(data.next.indexOf("?"));
-        }
         console.log(data);
         callback(response.statusCode, data);
     });
@@ -96,11 +59,8 @@ var getCancelado = function (body, token, callback) {
 
 //POST PARA EL METODO DE RUBY
 var postPay = function (body, token, callback) {
-    //Cuerpo que vamos a enviar///////
     var client = new Client();
-    /////////////////////////////////
-    //POST METHOD:
-    var args = {
+     var args = {
         data: {
             "shopping_id": 1,
             "total": 1 * 100,
@@ -111,8 +71,8 @@ var postPay = function (body, token, callback) {
                 "currency": "USD",
                 "quantity": 1
             }],
-            "return_url": "http://192.168.1.42:3000/exitoso",
-            "cancel_url": "http://192.168.1.42:3000/cancelado"
+            "return_url": "http://192.168.1.42:3001/payment/exitoso",
+            "cancel_url": "http://192.168.1.42:3001/payment/cancelado"
         },
         headers: {
             "Content-Type": "application/json",
@@ -210,7 +170,6 @@ var postCards = function (body, token, callback) {
 };
 
 module.exports = {
-    getBills: getBills,
     getExitoso: getExitoso,
     postPay: postPay,
     postCards: postCards,
