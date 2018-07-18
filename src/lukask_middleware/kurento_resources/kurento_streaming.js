@@ -441,9 +441,13 @@ function stopTransmission(sessionId, idOwnerTrans){
 		}
 		presenter.pipeline.release();
         presenter = null;
-        deletePresenter(idOwnerTrans);
-		viewers = [];
 
+        if(idOwnerTrans == null){
+            deleteForSession(sessionId);
+        }else{
+            deletePresenter(idOwnerTrans);
+        }
+  		//viewers = [];
     } else if(viewers[sessionId]){
         viewers[sessionId].webRtcEndpoint.release();
         delete viewers[sessionId];
@@ -508,6 +512,25 @@ function deletePresenter(idOwnerTrans){
     var itemPresen = null;
     for(var itemP in presenters){
         if(presenters[itemP].userId === idOwnerTrans){
+            itemPresen = itemP;
+            break;
+        }
+    }
+    console.log("itemPresen", itemPresen);
+    if(itemPresen != null){
+        delete presenters[itemPresen];
+    }
+}
+
+
+/**
+ * Proceso de para eliminar emisores por sessionId.
+ * @param {number} idOwnerTrans 
+ */
+function deleteForSession(sessionId){
+    var itemPresen = null;
+    for(var itemP in presenters){
+        if(presenters[itemP].id === sessionId){
             itemPresen = itemP;
             break;
         }
