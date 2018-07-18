@@ -33,6 +33,7 @@ var bodyParser = require('body-parser');
 /**
  * ///////////////////////////ROUTES://///////////////////////
  */
+var notificationRoute = require('./routes/notification');
 var userRoute = require('./routes/user');
 var relevanceRoute = require('./routes/relevance');
 var commentRoute = require('./routes/comment');
@@ -150,6 +151,7 @@ app.use(function (req, res, next) {
                 if (keyData.key) {
                   if (keyData.key.crypto_user_id == workerOrigin) {
                     req.session["key"] = {
+                      crypto_user_id: workerOrigin,
                       token: keyData.key.token
                     }
                     resolve(true);
@@ -198,6 +200,8 @@ app.use(function (req, res, next) {
           data: "You must be logged first."
         });
       }
+
+      console.log(req.session.key);
 
       let localEncrypted = req.session.key.crypto_user_id;
       if (!req.headers['x-access-token']) {
@@ -261,6 +265,7 @@ io.use(function (socket, next) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+app.use('/notification', notificationRoute);
 app.use('/user', userRoute);
 app.use('/relevance', relevanceRoute);
 app.use('/comment', commentRoute);
@@ -482,6 +487,18 @@ client.on('connect', function (connection) {
       action: "subscribe",
       data: {
         action: "update",
+      }
+    }
+  };
+
+  connection.send(JSON.stringify(msg));
+
+  var msg = {
+    stream: "notification_received",
+    payload: {
+      action: "subscribe",
+      data: {
+        action: "create",
       }
     }
   };

@@ -61,13 +61,13 @@ wss.on("connection", function(ws){
     //En caso de error del connecion
     ws.on("error", function(error){
         console.log("Error en la conexion para la session: " + sessionId + " con error, " + error);
-        stopTransmission(sessionId);
+        stopTransmission(sessionId, null);
     });
 
     //En caso de cerrar la conexion del wss
     ws.on("close", function(){
         console.log("conexion cerrada para la secion: " + sessionId)
-        stopTransmission(sessionId);
+        stopTransmission(sessionId, null);
     });
 
     //Escucha las acciones enviadas desde el cliente.
@@ -412,7 +412,7 @@ function startViewer(sessionId, wss, sdpOffer, idOwnerTrans, callback){
  * @param {string} sessionId  secion actual
  */
 function stopTransmission(sessionId, idOwnerTrans){
-
+  
     console.log("Id a detener", idOwnerTrans)
     if (viewers.length < 1 && presenters.length === 1) {
         presenters = [];
@@ -422,13 +422,17 @@ function stopTransmission(sessionId, idOwnerTrans){
 			kurentoClient = null;
 		}
     }
-    
-    presenter = getPresenter(idOwnerTrans);
+
+    if(idOwnerTrans == null){
+        presenter = getForSession(sessionId);
+    }else{
+        presenter = getPresenter(idOwnerTrans);
+    }
+    console.log("presneter", presenter);
     if(presenter != null){
         console.log("entro a terminar la transmicion en los clientes")
         for (var i in viewers) {
             var viewer = viewers[i];
-            console.log("viewer......", viewer);
 			if (viewer.ws && viewer.idOwnerTrans === presenter.userId) {
 				viewer.ws.send(JSON.stringify({
 					keyWord : 'stopCommunication'
@@ -481,18 +485,34 @@ function getPresenter(idPresenter){
     return null;
 }
 
+
+/**
+ * Obtenemos el emisor de la transmmicion por session.
+ * @param {number} idPresenter 
+ */
+function getForSession(sessionId){
+
+    for(var itemP in presenters){
+        if(presenters[itemP].id == sessionId){
+            return presenters[itemP];
+        }
+    }
+    return null;
+}
+
 /**
  * Proceso de para eliminar emisores.
  * @param {number} idOwnerTrans 
  */
 function deletePresenter(idOwnerTrans){
     var itemPresen = null;
-    for(var itemP in presenter){
+    for(var itemP in presenters){
         if(presenters[itemP].userId === idOwnerTrans){
             itemPresen = itemP;
             break;
         }
     }
+    console.log("itemPresen", itemPresen);
     if(itemPresen != null){
         delete presenters[itemPresen];
     }

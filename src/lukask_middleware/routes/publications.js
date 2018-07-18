@@ -76,9 +76,23 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
 
   publicationRestClient.postPub(req.body, req.files, token, function (responseCode, data) {
     if (responseCode == 201) {
-      wepushClient.notify('Nueva publicación registrada', req.body.detail, '/inicio', function (resCode, notifData) {
+      /*let title = 'Nueva publicación registrada';
+      let content = (req.body.detail.length > 100) ? req.body.detail.substring(0, 100) : req.body.detail;
+      let defaultUrl = '/';
+      let queryParam = data.id_publication;
+      let actions = [
+        {
+          action: '/?pubId=' + queryParam,
+          title: 'Ver Pubswall'
+        },
+        {
+          action: '/mapview?pubId=' + queryParam,
+          title: 'Ver Mapa'
+        },
+      ]
+      wepushClient.notify(title, content, defaultUrl, actions, function (resCode, notifData) {
         console.log(resCode, notifData);
-      });
+      });*/
 
       return res.status(responseCode).json({
         code: responseCode,
