@@ -51,23 +51,35 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
 
   actionRestClient.postAction(req.body, req.file, token, function (responseCode, data) {
     if (responseCode == 201) {
-      let userNotif = JSON.parse(data.receivers);
+      let userNotif = data.receivers;
 
       if (userNotif.length > 0) {
         let receivers = [];
-        let title = 'Nuevo comentario registrado';
-        let content = (req.body.description.length > 100) ? req.body.description.substring(0, 100) + "..." : req.body.description;
-        let defaultUrl = '/?pubId=' + data.publication + ((data.action_parent) ? '&comId=' + data.action_parent + '&repId=' + data.id_action : '&comId=' + data.id_action);
+        let userEmitter = req.body.userName;
+        //let emitterId = req.body.userId;
+        let emitterImage = req.body.userImage;
+        let title = 'Lukask, expresa tu opinión';
+        let content;
+        let defaultUrl = '/activity?pubId=' + data.publication + ((data.action_parent) ? '&comId=' + data.action_parent + '&repId=' + data.id_action : '&comId=' + data.id_action);
 
         for (let user of userNotif) {
+          if (user.fields.owner == true) {
+            content = userEmitter + " ha" + ((req.body.action_parent) ? " respondido un comentario de tu publicación" : " comentado tu publicación");
+          }
+          else {
+            /*if(emitterId == data.pub_owner) {
+              content = userEmitter + " ha" + ((req.body.action_parent) ? " respondido un comentario de su publicación" : " comentado su publicación");
+            }*/
+            content = userEmitter + " ha" + ((req.body.action_parent) ? " respondido un comentario de la publicación que has comentado" : " comentado la publicación en la que has interactuado");
+          }
           receivers[receivers.length] = {
+            user_img: emitterImage,
             user_id: user.fields.user_register,
             title: title,
-            pushContent: content,
             content: content,
             open_url: defaultUrl,
             actions: null
-          }
+          };
         }
 
         notifRestClient.postNotifications(title, req.body.date, defaultUrl, receivers, token, function (notCode, notData) {

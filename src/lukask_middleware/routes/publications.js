@@ -92,13 +92,13 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
       ]
       wepushClient.notify(title, content, defaultUrl, actions, function (resCode, notifData) {
         console.log(resCode, notifData);
-      });
+      });*/
 
       return res.status(responseCode).json({
         code: responseCode,
         title: "Publication has been created successfully",
         data: data
-      });*/
+      });
     }
     return res.status(responseCode).json({
       code: responseCode,
