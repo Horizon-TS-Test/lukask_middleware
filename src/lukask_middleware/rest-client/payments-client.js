@@ -41,7 +41,7 @@ var getCancelado = function (callback) {
 };
 
 
-//POST PARA EL METODO DE RUBY
+//POST PayPal
 var postPay = function (body, token, callback) {
     var client = new Client();
     var args = {
@@ -79,7 +79,8 @@ var postPay = function (body, token, callback) {
 
 
 
-//Tarjetas
+//POST Tarjetas
+
 var postCards = function (body, token, callback) {
     var client = new Client();
     var args = {
@@ -87,22 +88,22 @@ var postCards = function (body, token, callback) {
             "shopping_id": "",
             "tarjeta": {
                 "email": req.body.email,
-                "number": req.body.card,
-                "expire_month": mes,
-                "expire_year": anio,
-                "cvv2": req.body.cvv
+                "number": req.body.numerocard,
+                "expire_month": req.body.fechames,
+                "expire_year": req.body.fechaanio,
+                "cvv2": req.body.cvv2
             },
             "productos": {
-                "total": req.session.cart.totalPrecio * 100,
+                "total": 1 * 100,
                 "items": [{
-                    "name": "Back End",
-                    "sku": "item",
+                    "name": "PAGO DEL SERVICIO " + body.empresa + "",
+                    "sku": body.factura,
                     "price": 1,
                     "currency": "USD",
                     "quantity": 1
                 }],
-                "return_url": "http://localhost:3001/exitoso",
-                "cancel_url": "http://localhost:3001/carrito"
+                "return_url": "http://192.168.1.42:3001/payment/exitoso",
+                "cancel_url": "http://192.168.1.42:3001/payment/cancelado"
             }
         },
         headers: {
@@ -111,7 +112,7 @@ var postCards = function (body, token, callback) {
         }
     }
 
-    var post = client.post(restUrl.cards, args, function (data, response) {
+    var post = client.post(restUrl.card, args, function (data, response) {
         callback(response.statusCode, data);
     });
 
