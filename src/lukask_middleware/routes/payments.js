@@ -64,11 +64,11 @@ router.post('/pay', function (req, res, next) {
 });
 
 //Post de la Tarjeta
-router.post('/card', function (req, res, next) {
-  let token = req.session.key.token;
-  console.log("Cuerpo", req.body);
+router.post('/cards', function (req, res, next) {
+  //Debe ingresar las fechas y los datos de la tarjeta
+  var token = req.session.key.token;
   paymentRestClient.postCards(req.body, token, function (responseCode, data) {
-    if (responseCode == 200) {
+     if (responseCode == 200) {
       return res.status(responseCode).json({
         code: responseCode,
         title: "Sus datos successfully",
