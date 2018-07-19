@@ -4,13 +4,11 @@ var router = express.Router();
 var actionRestClient = require('./../rest-client/action-client');
 var actionTypes = require('./../const/action-types');
 
-var request = require('request');
-
 var wepushClient = require('./../rest-client/webpush-client');
 
 router.post('/', function (req, res, next) {
   let token = req.session.key.token;
-  let relevanceType = actionTypes.relevant;
+  let relevanceType = actionTypes.relevance;
   req.body.action_type = relevanceType;
 
   console.log(req.body);

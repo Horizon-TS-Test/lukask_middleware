@@ -22,7 +22,6 @@ var getUserProfile = function (userId, token, callback) {
     }
 
     var get = client.get(restUrl.user + userId + "/", args, function (data, response) {
-        console.log("Datossss de user cliente middle");
         console.log(data);
         callback(response.statusCode, data);
     });
@@ -138,6 +137,7 @@ var postUser = function (body, file, token, callback) {
     }
     //////////////////////////////////////////////////////////////////////////////////////
 }
+
 
 module.exports = {
     getUserProfile,

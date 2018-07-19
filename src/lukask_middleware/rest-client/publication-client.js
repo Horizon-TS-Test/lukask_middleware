@@ -131,6 +131,7 @@ var postPub = function (body, files, token, callback) {
     form.append('type_publication', body.type_publication);
     form.append('location', body.location);
     form.append('address', body.address);
+    form.append('is_trans', body.is_trans);
 
     if (files) {
         for (var i = 0; i < files.length; i++) {

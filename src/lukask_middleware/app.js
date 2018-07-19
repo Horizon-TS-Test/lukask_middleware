@@ -34,6 +34,7 @@ var bodyParser = require('body-parser');
  * ///////////////////////////ROUTES://///////////////////////
  */
 var signInRoute = require('./routes/signIn.js');
+var notificationRoute = require('./routes/notification');
 var userRoute = require('./routes/user');
 var relevanceRoute = require('./routes/relevance');
 var commentRoute = require('./routes/comment');
@@ -154,6 +155,7 @@ app.use(function (req, res, next) {
                 if (keyData.key) {
                   if (keyData.key.crypto_user_id == workerOrigin) {
                     req.session["key"] = {
+                      crypto_user_id: workerOrigin,
                       token: keyData.key.token
                     }
                     resolve(true);
@@ -202,6 +204,8 @@ app.use(function (req, res, next) {
           data: "You must be logged first."
         });
       }
+
+      console.log(req.session.key);
 
       let localEncrypted = req.session.key.crypto_user_id;
       if (!req.headers['x-access-token']) {
@@ -266,6 +270,7 @@ io.use(function (socket, next) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.use('/signIn', signInRoute);
+app.use('/notification', notificationRoute);
 app.use('/user', userRoute);
 app.use('/relevance', relevanceRoute);
 app.use('/comment', commentRoute);
@@ -495,6 +500,18 @@ client.on('connect', function (connection) {
   };
 
   connection.send(JSON.stringify(msg));
+
+  var msg = {
+    stream: "notification_received",
+    payload: {
+      action: "subscribe",
+      data: {
+        action: "create",
+      }
+    }
+  };
+
+  connection.send(JSON.stringify(msg));
   ////
 
   connection.on('message', function (message) {
@@ -581,3 +598,8 @@ client.connect('ws://' + servers.tornado_websocket + '/ws/ws_db_pubsub', "", "ht
 module.exports = { app: app, server: server };
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/***************************************
+ ********* kurento streaming ************
+ **************************************/
+var kurento = require("./kurento_resources/kurento_streaming")
