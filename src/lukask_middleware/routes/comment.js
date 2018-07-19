@@ -4,7 +4,7 @@ var router = express.Router();
 var actionRestClient = require('./../rest-client/action-client');
 var actionTypes = require('./../const/action-types');
 
-var request = require('request');
+var notifRestClient = require('./../rest-client/notification-client');
 /////////////////////// FILE UPLOAD ////////////////////////
 var multer = require("multer");
 var upload = multer({ dest: 'tmp_uploads/' });
@@ -49,12 +49,47 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
   let commentType = actionTypes.comment;
   req.body.action_type = commentType;
 
-  console.log(req.body);
   actionRestClient.postAction(req.body, req.file, token, function (responseCode, data) {
-    if (responseCode == 201 || responseCode == 200) {
-      wepushClient.notify('Nuevo comentario registrado', req.body.description, '/inicio', function (resCode, commentData) {
-        console.log(resCode, commentData);
-      });
+    if (responseCode == 201) {
+      let userNotif = data.receivers;
+
+      if (userNotif.length > 0) {
+        let receivers = [];
+        let userEmitter = req.body.userName;
+        //let emitterId = req.body.userId;
+        let emitterImage = req.body.userImage;
+        let title = 'Lukask, expresa tu opinión';
+        let content;
+        let defaultUrl = '/activity?pubId=' + data.publication + ((data.action_parent) ? '&comId=' + data.action_parent + '&repId=' + data.id_action : '&comId=' + data.id_action);
+
+        for (let user of userNotif) {
+          if (user.fields.owner == true) {
+            content = userEmitter + " ha" + ((req.body.action_parent) ? " respondido un comentario de tu publicación" : " comentado tu publicación");
+          }
+          else {
+            /*if(emitterId == data.pub_owner) {
+              content = userEmitter + " ha" + ((req.body.action_parent) ? " respondido un comentario de su publicación" : " comentado su publicación");
+            }*/
+            content = userEmitter + " ha" + ((req.body.action_parent) ? " respondido un comentario de la publicación que has comentado" : " comentado la publicación en la que has interactuado");
+          }
+          receivers[receivers.length] = {
+            user_img: emitterImage,
+            user_id: user.fields.user_register,
+            title: title,
+            content: content,
+            open_url: defaultUrl,
+            actions: null
+          };
+        }
+
+        notifRestClient.postNotifications(title, req.body.date, defaultUrl, receivers, token, function (notCode, notData) {
+          console.log(notCode, notData);
+        });
+
+        wepushClient.notify(receivers, function (resCode, notifData) {
+          console.log(resCode, notifData);
+        });
+      }
 
       return res.status(responseCode).json({
         code: responseCode,

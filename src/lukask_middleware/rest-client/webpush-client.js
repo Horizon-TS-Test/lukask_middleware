@@ -1,16 +1,14 @@
 var webpush = require('./../config/push-api');
 var Client = require("node-rest-client").Client;
 
-var notify = function (title, content, open_url, callback) {
+var notify = function (receivers, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
 
     //POST METHOD:
     var args = {
         data: {
-            "title": title,
-            "content": content,
-            "open_url": open_url
+            "receivers": receivers
         },
         headers: {
             "Content-Type": "application/json",
