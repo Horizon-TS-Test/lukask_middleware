@@ -177,16 +177,6 @@ function getKurentoClient(callback){
 }
 
 /**
- * Test de servidor.
- */
-/*getKurentoClient((error, kurentoClient) => {
-    if(error){
-        console.log(error);
-    }
-    generateKeyUser();
-});*/
-
-/**
  * Permite generar una clave unica, para identificadores de la transmicion.
  */
 function generateKeyUser(){
@@ -272,11 +262,11 @@ function startPresenter(sessionId, wss, sdpOffer, userId, callback){
             presenter.pipeline = pipeline;
             pipeline.create('WebRtcEndpoint', function(error, webRtcEndpoint){
                 if(error){
-                    stopTransmission(sessionId);
+                    stopTransmission(sessionId, userId);
                     return callback(error)
                 }
                 if(presenter === null){
-                    stopTransmission(sessionId);
+                    stopTransmission(sessionId, null);
                     return callback(noPresentTransmission)
                 }
 
@@ -302,11 +292,11 @@ function startPresenter(sessionId, wss, sdpOffer, userId, callback){
                 //Proceso de seteo de datos ofertantes. 
                 webRtcEndpoint.processOffer(sdpOffer, function(error, sdpAnswer){
                     if (error){
-                        stopTransmission(sessionId);
+                        stopTransmission(sessionId, userId);
                         return callback(error);
                     }
                     if(presenter === null){
-                        stopTransmission(sessionId);
+                        stopTransmission(sessionId, null);
                         return callback(noPresentTransmission)
                     }
 
@@ -316,7 +306,7 @@ function startPresenter(sessionId, wss, sdpOffer, userId, callback){
                 //Verificamos, errores
                 webRtcEndpoint.gatherCandidates(function(error){
                     if (error){
-                        stopTransmission(sessionId);
+                        stopTransmission(sessionId, userId);
                         return callback(error);
                     }
                 });
@@ -336,9 +326,9 @@ function startViewer(sessionId, wss, sdpOffer, idOwnerTrans, callback){
     console.log("Entro a al viewer");
     clearCandidatesQueue(sessionId);
     presenter = getPresenter(idOwnerTrans);
-    console.log("presenterTemp", presenter);
+    
     if(presenter === null){
-        stopTransmission(sessionId);
+        stopTransmission(sessionId, null);
         return callback(noPresentTransmission);
     }
 
@@ -355,7 +345,7 @@ function startViewer(sessionId, wss, sdpOffer, idOwnerTrans, callback){
         }
 
         if (presenter == null){
-            stopTransmission(sessionId, idOwnerTrans);
+            stopTransmission(sessionId, null);
             return callback(noPresentTransmission);
         }
 
@@ -381,17 +371,17 @@ function startViewer(sessionId, wss, sdpOffer, idOwnerTrans, callback){
             }
 
             if(presenter === null){
-                stopTransmission(sessionId, idOwnerTrans);
+                stopTransmission(sessionId, null);
                 return callback(noPresentTransmission)
             }
 
             presenter.webRtcEndpoint.connect(webRtcEndpoint, function(error){
                 if (error){
-                    stopTransmission(sessionId);
+                    stopTransmission(sessionId, idOwnerTrans);
                     return callback(error);
                 }
                 if(presenter === null){
-                    stopTransmission(sessionId, idOwnerTrans);
+                    stopTransmission(sessionId, null);
                     return callback(noPresentTransmission);
                 }
                 callback(null, sdpAnswer);
@@ -413,7 +403,8 @@ function startViewer(sessionId, wss, sdpOffer, idOwnerTrans, callback){
  */
 function stopTransmission(sessionId, idOwnerTrans){
   
-    console.log("Id a detener", idOwnerTrans)
+    console.log("Id a detener", idOwnerTrans);
+    var sessionViewers = [];
     if (viewers.length < 1 && presenters.length === 1) {
         presenters = [];
 		console.log('Closing kurento client');
@@ -428,12 +419,13 @@ function stopTransmission(sessionId, idOwnerTrans){
     }else{
         presenter = getPresenter(idOwnerTrans);
     }
-    console.log("presneter", presenter);
+    
     if(presenter != null){
-        console.log("entro a terminar la transmicion en los clientes")
         for (var i in viewers) {
             var viewer = viewers[i];
 			if (viewer.ws && viewer.idOwnerTrans === presenter.userId) {
+                console.log("viewer", viewer)
+                sessionViewers.push(i);
 				viewer.ws.send(JSON.stringify({
 					keyWord : 'stopCommunication'
 				}));
@@ -447,7 +439,8 @@ function stopTransmission(sessionId, idOwnerTrans){
         }else{
             deletePresenter(idOwnerTrans);
         }
-  		//viewers = [];
+        deleteViewers(sessionViewers);
+
     } else if(viewers[sessionId]){
         viewers[sessionId].webRtcEndpoint.release();
         delete viewers[sessionId];
@@ -541,4 +534,18 @@ function deleteForSession(sessionId){
     }
 }
 
+/**
+ * Permite eliminar viewers previamente seleccionados.
+ * @param {Array} viewersDel contiene las sessiones de los viewers
+ */
+function deleteViewers(viewersDel){
+    try {
+        for(var item in viewersDel){
+            viewers[viewersDel[item]].webRtcEndpoint.release();
+            delete viewers[viewersDel[item]];
+        }
+    }catch(err){
+        console.error("Erro en el proceso de eleiminar viewer", err)
+    }
+}
 
