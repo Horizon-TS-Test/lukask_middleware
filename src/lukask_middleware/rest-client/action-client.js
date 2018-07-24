@@ -82,9 +82,12 @@ var postAction = function (body, file, token, callback) {
     var form = r.form();
     form.append('description', (body.description) ? body.description : "");
     form.append('type_action', body.action_type);
-    form.append('publication', body.id_publication);
-    form.append('action_parent', (body.action_parent) ? body.action_parent : "");
-    form.append('date_register', body.date);
+    if (!body.isComment) {
+        form.append('publication', body.parentId);
+    }
+    else {
+        form.append('action_parent', body.parentId);
+    }
     form.append('active', body.active + "");
 
     if (file) {

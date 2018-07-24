@@ -35,6 +35,43 @@ var getUserProfile = function (userId, token, callback) {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
+var getUserSupporters = function (relevanceType, comRelevance, limit, offset, token, callback) {
+    ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
+    var client = new Client();
+    var typeRelFilter = (comRelevance) ? "?usrRelCom=" + relevanceType : "?usrRelPub=" + relevanceType;
+    var limitFilter = (limit) ? "&limit=" + limit : "";
+    var offsetFilter = (offset) ? "&offset=" + offset : "";
+
+    var queryFilter = typeRelFilter + limitFilter + offsetFilter;
+    var nextPattern;
+
+    //GET METHOD:
+    var args = {
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Token " + token
+        }
+    }
+
+    var get = client.get(restUrl.user + queryFilter + "/", args, function (data, response) {
+        if (data.next) {
+            nextPattern = "&" + data.next.substring(data.next.indexOf("limit="), data.next.indexOf("&", data.next.indexOf("limit=")));
+            nextPattern += "&" + data.next.substring(data.next.indexOf("offset="));
+            data.next = nextPattern;
+        }
+        console.log(data);
+        callback(response.statusCode, data);
+    });
+
+    get.on("error", function (err) {
+        console.log(err);
+        callback(500, err);
+    });
+    ////
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+}
+
 var patchUser = function (userId, body, file, token, callback) {
     ////////////////////////////////// POST REQUEST //////////////////////////////////////
     var r = request.patch(
@@ -82,6 +119,7 @@ var patchUser = function (userId, body, file, token, callback) {
 }
 
 module.exports = {
-    getUserProfile,
-    patchUser: patchUser,
+    getUserProfile: getUserProfile,
+    getUserSupporters: getUserSupporters,
+    patchUser: patchUser
 }
