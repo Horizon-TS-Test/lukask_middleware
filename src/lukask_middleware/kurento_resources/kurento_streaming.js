@@ -226,7 +226,8 @@ function startPresenter(sessionId, wss, sdpOffer, userId, callback){
         id : sessionId,
         userId: userId,
         pipeline : null,
-        webRtcEndpoint : null
+        webRtcEndpoint : null,
+        ws : wss
     }
     presenters.push(presenter);
     console.log("datos del presenter", presenters);
@@ -403,9 +404,12 @@ function startViewer(sessionId, wss, sdpOffer, idOwnerTrans, callback){
  */
 function stopTransmission(sessionId, idOwnerTrans){
   
-    console.log("Id a detener", idOwnerTrans);
+    console.log("Id a detener", presenters);
     var sessionViewers = [];
     if (viewers.length < 1 && presenters.length === 1) {
+        presenters[0].ws.send(JSON.stringify({
+            keyWord : 'stopCommunication'
+        }));
         presenters = [];
 		console.log('Closing kurento client');
 		if(kurentoClient !== null){
@@ -431,7 +435,10 @@ function stopTransmission(sessionId, idOwnerTrans){
 				}));
 			}
 		}
-		presenter.pipeline.release();
+        presenter.pipeline.release();
+        presenter.ws.send(JSON.stringify({
+            keyWord : 'stopCommunication'
+        }));
         presenter = null;
 
         if(idOwnerTrans == null){

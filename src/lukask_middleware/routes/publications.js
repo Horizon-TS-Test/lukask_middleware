@@ -128,44 +128,15 @@ router.get('/:pubId', function (req, res, next) {
   });
 });
 
-/*router.post('/:todoId', upload.single('todo_image'), function (req, res, next) {
-  let todoId = req.params.todoId;
+router.post('/transmission/:pubId', function (req, res, next) {
+  let pubId = req.params.pubId;
   let token = req.session.key.token;
 
-  console.log("Body: ", req.body);
-  console.log("File: ", req.file);
-
-  /////////////////////// FORMAT DATA ////////////////////////
-  let formData;
-  if (req.file !== undefined) {
-    formData = {
-      title: req.body.title,
-      todo_image: {
-        value: fs.createReadStream(req.file.path),
-        options: {
-          filename: req.file.originalname,
-          contentType: req.file.mimetype,
-        }
-      },
-      completed: req.body.completed,
-    };
-  }
-  else {
-    formData = {
-      title: req.body.title,
-      completed: req.body.completed,
-    };
-  }
-  ////////////////////////////////////////////////////////////
-
-  publicationRestClient.patchTodo(todoId, formData, token, function (responseCode, data) {
+  publicationRestClient.patchPub(req.body, null, token, function (responseCode, data) {
     if (responseCode == 200) {
-      if (req.file !== undefined) {
-        fs.unlink(req.file.path);
-      }
       return res.status(responseCode).json({
         code: responseCode,
-        title: "Todo has been updated successfully",
+        title: "Transmission has been created stopped successfully",
         data: data
       });
     }
@@ -177,7 +148,7 @@ router.get('/:pubId', function (req, res, next) {
   });
 });
 
-router.get('/delete/:todoId', function (req, res, next) {
+/*router.get('/delete/:todoId', function (req, res, next) {
   let todoId = req.params.todoId;
   let token = req.session.key.token;
 

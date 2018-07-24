@@ -35,7 +35,7 @@ router.get('/', function (req, res, next) {
     });
   }
   let relevanceType = (req.query.pub_id) ? req.query.pub_id : req.query.com_id;
-  let comRelevance = (req.query.comRelevance) ? req.query.com_relevance : false;
+  let comRelevance = (req.query.com_relevance) ? req.query.com_relevance : false;
   let limit = (req.query.limit) ? req.query.limit : null;
   let offset = (req.query.offset) ? req.query.offset : null;
   let token = req.session.key.token;

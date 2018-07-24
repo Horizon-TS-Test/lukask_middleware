@@ -11,12 +11,11 @@ router.post('/', function (req, res, next) {
   let relevanceType = actionTypes.relevance;
   req.body.action_type = relevanceType;
 
-  console.log("req.body",req.body);
   actionRestClient.postAction(req.body, null, token, function (responseCode, data) {
     if (responseCode == 201 || responseCode == 200) {
-      wepushClient.notify('Nuevo apoyo registrado', "Un me gusta", '/inicio', function (resCode, relevanceData) {
+      /*wepushClient.notify('Nuevo apoyo registrado', "Un me gusta", '/inicio', function (resCode, relevanceData) {
         console.log(resCode, relevanceData);
-      });
+      });*/
 
       return res.status(responseCode).json({
         code: responseCode,
