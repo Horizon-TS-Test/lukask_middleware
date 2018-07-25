@@ -470,7 +470,7 @@ client.on('connect', function (connection) {
   connection.send(JSON.stringify(msg));
 
   var msg = {
-    stream: "comments",
+    stream: "actions",
     payload: {
       action: "subscribe",
       data: {
@@ -482,7 +482,7 @@ client.on('connect', function (connection) {
   connection.send(JSON.stringify(msg));
 
   var msg = {
-    stream: "comments",
+    stream: "actions",
     payload: {
       action: "subscribe",
       data: {

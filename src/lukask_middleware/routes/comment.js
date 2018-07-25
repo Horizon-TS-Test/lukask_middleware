@@ -49,6 +49,7 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
   let commentType = actionTypes.comment;
   req.body.action_type = commentType;
 
+  console.log(req.body);
   actionRestClient.postAction(req.body, req.file, token, function (responseCode, data) {
     if (responseCode == 201) {
       let userNotif = data.receivers;

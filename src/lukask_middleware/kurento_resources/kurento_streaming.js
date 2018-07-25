@@ -237,25 +237,25 @@ function startPresenter(sessionId, wss, sdpOffer, userId, callback){
         
         //Verificamos si existe algun error
         if(error){
-            stopTransmission(sessionId);
+            stopTransmission(sessionId, userId);
             return callback(error)
         }
 
         //Verificamos que exista ya asignado un candidato para transmitir.
         if(presenter == null){
-            stopTransmission(sessionId);
+            stopTransmission(sessionId, null);
             return callback(noPresentTransmission)
         }
 
         //Se procede a crear el proceso de transmcion.
         kurentoClient.create("MediaPipeline", function(error, pipeline){
             if(error){
-                stopTransmission(sessionId);
+                stopTransmission(sessionId, userId);
                 return callback(error);
             }
 
             if(presenter === null){
-                stopTransmission(sessionId);
+                stopTransmission(sessionId, null);
                 return callback(noPresentTransmission)
             }
 
