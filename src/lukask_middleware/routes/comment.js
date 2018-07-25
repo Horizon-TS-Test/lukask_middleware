@@ -60,12 +60,10 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
 
       if (userNotif.length > 0) {
         if (data.pub_owner) {
-          console.log(data.pub_owner);
           ownerPubName = data.pub_owner.user_name;
           ownerPubId = data.pub_owner.user_id;
         }
         if (data.action_parent_owner) {
-          console.log(data.action_parent_owner);
           ownerComName = data.action_parent_owner.user_name;
           ownerComId = data.action_parent_owner.id;
         }

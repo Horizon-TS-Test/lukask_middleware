@@ -95,6 +95,7 @@ var postAction = function (body, file, token, callback) {
         }
     }
     form.append('active', body.active + "");
+    form.append('date_register', body.date);
 
     if (file) {
         form.append('format_multimedia', (file.mimetype.indexOf("image") != -1) ? "IG" : "FL");
