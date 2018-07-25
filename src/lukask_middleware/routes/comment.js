@@ -49,14 +49,11 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
   let commentType = actionTypes.comment;
   req.body.action_type = commentType;
 
-  console.log(req.body);
-
   actionRestClient.postAction(req.body, req.file, token, function (responseCode, data) {
     if (responseCode == 201) {
       let userNotif = data.receivers;
       let ownerPubName, ownerComName;
       let ownerPubId, ownerComId;
-
 
       if (userNotif.length > 0) {
         if (data.pub_owner) {
@@ -79,7 +76,7 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
         for (let user of userNotif) {
           if (user.fields.owner_publication == true) {
             if (req.body.action_parent) {
-              if (user.fields.owner_commet == true) {
+              if (user.fields.owner_comment == true) {
                 content = userEmitter + " ha respondido tu comentario de tu publicación";
               }
               else if (emitterId == ownerComId) {
@@ -99,7 +96,7 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
                 if (emitterId == ownerComId) {
                   content = userEmitter + " también ha respondido su comentario de su publicación";
                 }
-                else if (user.fields.owner_commet == true) {
+                else if (user.fields.owner_comment == true) {
                   content = userEmitter + " ha respondido tu comentario de su publicación";
                 }
                 else {
@@ -107,7 +104,7 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
                 }
               }
               else {
-                content = userEmitter + " tambén ha comentado su publicación";
+                content = userEmitter + " también ha comentado su publicación";
               }
             }
             else {
@@ -115,8 +112,11 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
                 if (emitterId == ownerComId) {
                   content = userEmitter + " también ha respondido su comentario de la publicación de " + ownerPubName;
                 }
-                else if (user.fields.owner_commet == true) {
+                else if (user.fields.owner_comment == true) {
                   content = userEmitter + " ha respondido tu comentario de la publicación de " + ownerPubName;
+                }
+                else if(ownerPubName === ownerComName) {
+                  content = userEmitter + " también ha respondido el comentario de " + ownerComName + " de su publicación";
                 }
                 else {
                   content = userEmitter + " también ha respondido el comentario de " + ownerComName + " de la publicación de " + ownerPubName;
@@ -139,18 +139,12 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
         }
 
         notifRestClient.postNotifications(title, req.body.date, defaultUrl, receivers, token, function (notCode, notData) {
-          console.log("respondiendo desde notifRestCient");
           console.log(notCode, notData);
         });
 
-        console.log("Después de postNotifications");
-
         wepushClient.notify(receivers, function (resCode, notifData) {
-          console.log("respondiendo desde webpushClient");
           console.log(resCode, notifData);
         });
-
-        console.log("Después de webPushClient");
       }
 
       return res.status(responseCode).json({
