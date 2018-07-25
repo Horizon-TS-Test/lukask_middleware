@@ -24,7 +24,7 @@ var getNotifications = function (receiver, limit, offset, token, callback) {
 
     get = client.get(restUrl.getNotif + queryFilter, args, function (data, response) {
         if (data.next) {
-            nextPattern = "?" + data.next.substring(data.next.indexOf("limit="), data.next.indexOf("&", data.next.indexOf("limit=")));
+            nextPattern = "&" + data.next.substring(data.next.indexOf("limit="), data.next.indexOf("&", data.next.indexOf("limit=")));
             nextPattern += "&" + data.next.substring(data.next.indexOf("offset="), data.next.indexOf("&", data.next.indexOf("offset=")));
             data.next = nextPattern;
         }
