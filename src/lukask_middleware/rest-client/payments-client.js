@@ -1,18 +1,19 @@
 var restUrl = require('./../config/rest-api-url');
-var Planilla = require('./../models/panillas');
 var Client = require("node-rest-client").Client;
-//Post para el servicio
 
+////////////////// MULTIPART/FORM-DATA REQUESTS /////////////////////
 var request = require("request");
 
-//Ruta si fue un exito
+
+///////////////////////////////////////////METODO GET DE EXITOSO RESPUESTA/////////////////////////////
 var getExitoso = function (parametros, token, callback) {
-    console.log("Ingreso al exitoso", parametros);
+    ///////////////////////////////////////////NODE-REST-CLIENT////////////////////////////////////////
     var client = new Client();
+    ///////////////////////////////////////////DATOS DEL LA PAGINA DE PAYPAL GET///////////////////////
     var payerID = parametros.params.PayerID;
     var paymentId = parametros.params.paymentId;
 
-    //GET METHOD:
+    ///////////////////////////////////////////CONSUMO DE GET DEL SERVIDOR DE RUBY (PATTY)/////////////
     var get = client.get(restUrl.checkout + '/checkout?paymentId=' + paymentId + '&token=' + token + '&PayerID=' + payerID + '', function (data, response) {
         callback(response.statusCode, data);
     });
@@ -21,14 +22,14 @@ var getExitoso = function (parametros, token, callback) {
         console.log(err);
         callback(500, err.code);
     });
-    ////
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////
 };
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//Ruta no fue un exito
+
+///////////////////////////////////////////METODO GET DE CANCELADO RESPUESTA///////////////////////////
 var getCancelado = function (callback) {
+    ///////////////////////////////////////////METODO GET DE CANCELADO SERVIDOR PATTY///////////////////////////
     var get = client.get(restUrl.cancelado, args, function (data, response) {
-        console.log(data);
         callback(response.statusCode, data);
     });
 
@@ -36,22 +37,22 @@ var getCancelado = function (callback) {
         console.log(err);
         callback(500, err.code);
     });
-    ////
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////
 };
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-//POST PayPal
+///////////////////////////////////////////METODO POST DE PAGO POR LA PLATAFORMA///////////////////////
 var postPay = function (body, token, callback) {
+    var total = body.total * 100;
     var client = new Client();
     var args = {
         data: {
-            "shopping_id": 1,
-            "total": 1 * 100,
+            "shopping_id": body.ci,
+            "total": total,
             "items": [{
                 "name": "PAGO DEL SERVICIO " + body.empresa + "",
                 "sku": body.factura,
-                "price": 1,
+                "price": body.total,
                 "currency": "USD",
                 "quantity": 1
             }],
@@ -69,36 +70,33 @@ var postPay = function (body, token, callback) {
     });
 
     post.on("error", function (err) {
+        console.log("data", " cancelado");
+        console.log(err);
         callback(500, err.code);
     });
-    ////
-
-    ///////////////////////////////////////////////
 };
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-
-//POST Tarjetas
-
+///////////////////////////////////////////METODO POST DE PAGO POR TARJETA////////////////////////////
 var postCards = function (body, token, callback) {
+    var total = body.total * 100;
     var client = new Client();
     var args = {
         data: {
-            "shopping_id": "",
             "tarjeta": {
-                "email": req.body.email,
-                "number": req.body.numerocard,
-                "expire_month": req.body.fechames,
-                "expire_year": req.body.fechaanio,
-                "cvv2": req.body.cvv2
+                "email": body.email,
+                "number": body.numero,
+                "expire_month": body.mes,
+                "expire_year": body.anio,
+                "cvv2": body.cvv
             },
             "productos": {
-                "total": 1 * 100,
+                "total": total,
                 "items": [{
                     "name": "PAGO DEL SERVICIO " + body.empresa + "",
                     "sku": body.factura,
-                    "price": 1,
+                    "price": body.total,
                     "currency": "USD",
                     "quantity": 1
                 }],
@@ -111,7 +109,6 @@ var postCards = function (body, token, callback) {
             "Authorization": "Token " + token
         }
     }
-
     var post = client.post(restUrl.card, args, function (data, response) {
         callback(response.statusCode, data);
     });
@@ -119,10 +116,8 @@ var postCards = function (body, token, callback) {
     post.on("error", function (err) {
         callback(500, err.code);
     });
-    ////
-
-    ///////////////////////////////////////////////
 };
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 module.exports = {
     getExitoso: getExitoso,

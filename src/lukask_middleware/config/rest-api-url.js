@@ -5,10 +5,10 @@ module.exports = {
     login: 'http://192.168.1.56:8081/lukask-api/login/',
     user: 'http://192.168.1.56:8081/lukask-api/userProfile/',
  	getNotif: 'http://192.168.1.56:8081/lukask-api/notification_received/',
-    postNotif: 'http://192.168.1.56:8081/lukask-api/notification/'
-    pay: 'http://192.168.1.20:3000/pagar',
-    card: 'http://192.168.1.20:3000/card',
+    postNotif: 'http://192.168.1.56:8081/lukask-api/notification/',
+    pay: 'http://192.168.1.10:3000/pagar',
+    card: 'http://192.168.1.10:3000/card',
     exitoso:'http://192.168.1.42:3001/payment/exitoso',
-    checkout:'http://192.168.1.20:3000',
-    cancelado:'http://192.168.1.20:3000/cancelado'
+    checkout:'http://192.168.1.10:3000',
+    cancelado:'http://192.168.1.10:3000/cancelado'
 }
