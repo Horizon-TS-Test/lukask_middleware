@@ -10,7 +10,7 @@ var request = require('request');
 var fs = require("fs");
 ////////////////////////////////////////////////////////////
 
-var getActions = function (typeAction, parentId, replies, limit, offset, token, callback) {
+var getActions = function(typeAction, parentId, replies, limit, offset, token, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
     var typeFilter = "?type_action__id_type_action=" + typeAction;
@@ -32,7 +32,7 @@ var getActions = function (typeAction, parentId, replies, limit, offset, token, 
         }
     }
 
-    get = client.get(restUrl.action + queryFilter, args, function (data, response) {
+    get = client.get(restUrl.action + queryFilter, args, function(data, response) {
         if (data.next) {
             nextPattern = "&" + data.next.substring(data.next.indexOf("limit="), data.next.indexOf("&", data.next.indexOf("limit=")));
             nextPattern += "&" + data.next.substring(data.next.indexOf("offset="), data.next.indexOf("&", data.next.indexOf("offset=")));
@@ -42,7 +42,7 @@ var getActions = function (typeAction, parentId, replies, limit, offset, token, 
         callback(response.statusCode, data);
     });
 
-    get.on("error", function (err) {
+    get.on("error", function(err) {
         console.log(err);
         callback(500, err);
     });
@@ -51,7 +51,7 @@ var getActions = function (typeAction, parentId, replies, limit, offset, token, 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
-var postAction = function (body, file, token, callback) {
+var postAction = function(body, file, token, callback) {
     ////////////////////////////////// POST REQUEST //////////////////////////////////////
     var r = request.post(
         {
@@ -82,18 +82,8 @@ var postAction = function (body, file, token, callback) {
     var form = r.form();
     form.append('description', (body.description) ? body.description : "");
     form.append('type_action', body.action_type);
-    if (body.action_type == actionTypes.comment) {
-        form.append('publication', body.id_publication);
-        form.append('action_parent', body.action_parent);
-    }
-    else if (body.action_type == actionTypes.relevance) {
-        if (!body.isComment) {
-            form.append('publication', body.parentId ? body.parentId : body.id_publication);
-        }
-        else {
-            form.append('action_parent', body.parentId);
-        }
-    }
+    form.append('publication', body.id_publication);
+    form.append('action_parent', body.action_parent ? body.action_parent: "");
     form.append('active', body.active + "");
     form.append('date_register', body.date);
 

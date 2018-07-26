@@ -18,14 +18,13 @@ router.post('/', function (req, res, next) {
       let ownerPubName, ownerComName;
       let ownerPubId, ownerComId;
 
-      console.log(req.body);
-
+      console.log("req.body", req.body)
       if (req.body.active === true && userNotif.length > 0) {
         if (data.pub_owner) {
           ownerPubName = data.pub_owner.user_name;
           ownerPubId = data.pub_owner.user_id;
         }
-        else if (data.action_parent_owner) {
+        if (data.action_parent_owner) {
           ownerComName = data.action_parent_owner.user_name;
           ownerComId = data.action_parent_owner.id;
         }
@@ -39,26 +38,57 @@ router.post('/', function (req, res, next) {
         let defaultUrl = '/activity?pubId=' + data.publication + ((data.action_parent) ? '&comId=' + data.action_parent : '');
 
         for (let user of userNotif) {
-          if (req.body.isComment) {
-            if (user.fields.owner_comment == true) {
-              content = userEmitter + " ha apoyado tu comentario";
-            }
-            else if (emitterId == ownerComId) {
-              content = userEmitter + "también ha apoyado su comentario";
+          if (user.fields.owner_publication == true) {
+            if (req.body.action_parent) {
+              if (user.fields.owner_comment == true) {
+                content = userEmitter + " ha apoyado tu comentario de tu publicación";
+              }
+              else if (emitterId == ownerComId) {
+                content = userEmitter + " ha apoyado su comentario de tu publicación";
+              }
+              else {
+                content = userEmitter + " ha apoyado el comentario de " + ownerComName + " de tu publicación";
+              }
             }
             else {
-              content = userEmitter + "también ha apoyado el comentario de " + ownerComName;
+              content = userEmitter + " ha apoyado tu publicación";
             }
           }
           else {
-            if (user.fields.owner_publication == true) {
-              content = userEmitter + " ha apoyado tu publicación";
-            }
-            else if (emitterId == ownerPubId) {
-              content = userEmitter + "también ha apoyado su publicación";
+            if (emitterId == ownerPubId) {
+              if (req.body.action_parent) {
+                if (emitterId == ownerComId) {
+                  content = userEmitter + " también ha apoyado su comentario de su publicación";
+                }
+                else if (user.fields.owner_comment == true) {
+                  content = userEmitter + " ha apoyado tu comentario de su publicación";
+                }
+                else {
+                  content = userEmitter + " también ha apoyado el comentario de " + ownerComName + " de su publicación";
+                }
+              }
+              else {
+                content = userEmitter + " también ha apoyado su publicación";
+              }
             }
             else {
-              content = userEmitter + "también ha apoyado la publicación de " + ownerPubName;
+              if (req.body.action_parent) {
+                if (emitterId == ownerComId) {
+                  content = userEmitter + " también ha apoyado su comentario de la publicación de " + ownerPubName;
+                }
+                else if (user.fields.owner_comment == true) {
+                  content = userEmitter + " ha apoyado tu comentario de la publicación de " + ownerPubName;
+                }
+                else if (ownerPubName === ownerComName) {
+                  content = userEmitter + " también ha apoyado el comentario de " + ownerComName + " de su publicación";
+                }
+                else {
+                  content = userEmitter + " también ha apoyado el comentario de " + ownerComName + " de la publicación de " + ownerPubName;
+                }
+              }
+              else {
+                content = userEmitter + " también ha apoyado la publicación de " + ownerPubName;
+              }
             }
           }
 
