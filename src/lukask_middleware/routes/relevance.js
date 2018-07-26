@@ -18,6 +18,8 @@ router.post('/', function (req, res, next) {
       let ownerPubName, ownerComName;
       let ownerPubId, ownerComId;
 
+      console.log(req.body);
+
       if (req.body.active === true && userNotif.length > 0) {
         if (data.pub_owner) {
           ownerPubName = data.pub_owner.user_name;
@@ -38,7 +40,7 @@ router.post('/', function (req, res, next) {
 
         for (let user of userNotif) {
           if (user.fields.owner_publication == true) {
-            if (req.body.action_parent) {
+            if (data.action_parent_owner) {
               if (user.fields.owner_comment == true) {
                 content = userEmitter + " ha apoyado tu comentario de tu publicación";
               }
@@ -55,7 +57,7 @@ router.post('/', function (req, res, next) {
           }
           else {
             if (emitterId == ownerPubId) {
-              if (req.body.action_parent) {
+              if (data.action_parent_owner) {
                 if (emitterId == ownerComId) {
                   content = userEmitter + " también ha apoyado su comentario de su publicación";
                 }
@@ -71,7 +73,7 @@ router.post('/', function (req, res, next) {
               }
             }
             else {
-              if (req.body.action_parent) {
+              if (data.action_parent_owner) {
                 if (emitterId == ownerComId) {
                   content = userEmitter + " también ha apoyado su comentario de la publicación de " + ownerPubName;
                 }
