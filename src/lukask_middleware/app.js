@@ -21,6 +21,7 @@ const exp_time = 900;
 //const exp_time = 60;
 const def_exp_time = 86400;
 const aux_prefij = 'auxex_';
+const pay_prefij = 'pay-';
 
 var path = require('path');
 var favicon = require('serve-favicon');
@@ -40,6 +41,8 @@ var commentRoute = require('./routes/comment');
 var qtypeRoute = require('./routes/qtype');
 var publicationsRoute = require('./routes/publications');
 var loginRoute = require('./routes/login');
+//Ruta para mis Pagos
+var paymentsRoute = require('./routes/payments');
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -132,7 +135,7 @@ app.use(function (req, res, next) {
 var midGetClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
 app.use(function (req, res, next) {
   //REF: https://stackoverflow.com/questions/12525928/how-to-get-request-path-with-express-req-object
-  if (req.originalUrl.indexOf('login') === -1 && req.originalUrl.indexOf('logout') === -1) {
+  if (req.originalUrl.indexOf('login') === -1 && req.originalUrl.indexOf('logout') === -1 && req.originalUrl.indexOf('exitoso') === -1) {
     console.log("Express sessions controling middleware");
 
     let workerOrigin = req.headers['pass-key'];
@@ -265,6 +268,72 @@ io.use(function (socket, next) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * //////////////////////////////////////////////////////USING SOCKET.IO//////////////////////////////////////////////
+ */
+io.on("connection", function (socket) {
+  if (socket.force_logout) {
+    socket.emit('force_logout', 'You has been kicked from the server. Echo from server.');
+    //REF: https://stackoverflow.com/questions/42064870/socket-io-disconnection-on-logout-and-network-out
+    socket.disconnect();
+  } else {
+    var payClient = redis.createClient({
+      host: redisAuth.host,
+      port: redisAuth.port,
+      password: redisAuth.password
+    });
+
+    var payGetClient = redis.createClient({
+      host: redisAuth.host,
+      port: redisAuth.port,
+      password: redisAuth.password
+    });
+    /////////////////////// CREAR UNA REGISTRO EN REDIS///////////////////////
+    payClient.keys(pay_prefij + "*", function (error, keys) {
+      for (let i = 0; i < keys.length; i++) {
+        let getPromise = new Promise((resolve, reject) => {
+          payGetClient.get(keys[i], function (err, pay) {
+            let keyData = JSON.parse(pay);
+            if (keyData.crypto_user_id == socket.request.session.key.crypto_user_id) {
+              //REF: https://stackoverflow.com/questions/8281382/socket-send-outside-of-io-sockets-on
+              console.log("keyData.paypalData",keyData.paypalData);
+              /////////////////////// ENVIO DEL DATO EN EL SOCKET ///////////////////////
+              socket.emit("response-payment", JSON.stringify(keyData.paypalData));
+              resolve(true);
+            } else if (i + 1 == keys.length) {
+              reject(false);
+            }
+          });
+        });
+
+        getPromise.then((resp) => {});
+      }
+    });
+  }
+
+  socket.on("disconnect", function (data) {
+    console.log("Socket has been disconnected: ", data);
+  });
+});
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * //SOCKET WITH EXPRESS GENERATOR:
+ */
+//REF: https://medium.com/@suhas_chitade/express-generator-with-socket-io-80464341e8ba
+//TO SHARE SOCKET INSTANCE TO EXPRESS ROUTES:
+app.use(function (req, res, next) {
+  req.io = io;
+  next();
+});
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 app.use('/notification', notificationRoute);
 app.use('/user', userRoute);
 app.use('/relevance', relevanceRoute);
@@ -272,6 +341,8 @@ app.use('/comment', commentRoute);
 app.use('/qtype', qtypeRoute);
 app.use('/publication', publicationsRoute);
 app.use('/login', loginRoute);
+//Pagos//
+app.use('/payment', paymentsRoute);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
