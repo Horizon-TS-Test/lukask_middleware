@@ -33,7 +33,7 @@ router.get('/exitoso', function (req, res, next) {
     }
     payClient.set(paypalsecret, JSON.stringify(redisData));
     if (responseCode == 200) {
-      return res.redirect('http://127.0.0.1:4200/inicio');
+        return res.redirect('http://127.0.0.1:4200/inicio');
     }
     return res.status(responseCode).json({
       code: responseCode,
@@ -98,11 +98,11 @@ router.post('/card', function (req, res, next) {
       });
     } 
     if  (responseCode == 422) {
-      console.log("llego el error", responseCode);
+      console.log("llego el error", data);
       return res.status(responseCode).json({
         code: responseCode,
         title: "An error has occurred",
-        error: data
+        data: data
       });
     }
   });

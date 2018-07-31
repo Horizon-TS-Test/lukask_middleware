@@ -61,7 +61,9 @@ var cryptoGen = require('./tools/crypto-generator');
 var redisClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-var app = express();
+var app = express( 
+  console.log("Inicio")
+);
 var server = require("http").Server(app);
 var io = require("socket.io")(server);
 
@@ -311,6 +313,37 @@ io.on("connection", function (socket) {
       }
     });
   }
+
+  socket.on("confirm-pay", function(data) {
+    console.log("User confirm", data);
+    console.log("Soket cripto:", socket.request.session.key.crypto_user_id);
+
+    var delCli = redis.createClient({
+      host: redisAuth.host,
+      port: redisAuth.port,
+      password: redisAuth.password
+    });
+
+    payClient.keys(pay_prefij + "*", function (error, keys) {
+      for (let i = 0; i < keys.length; i++) {
+        let delPromise = new Promise((resolve, reject) => {
+          payGetClient.get(keys[i], function (err, pay) {
+            let keyData = JSON.parse(pay);
+            if (keyData.crypto_user_id == socket.request.session.key.crypto_user_id) {
+              //REF: https://stackoverflow.com/questions/8281382/socket-send-outside-of-io-sockets-on
+              console.log("keyData.paypalData",keyData.paypalData);
+              delCli.del(keys[i]);
+              resolve(true);
+            } else if (i + 1 == keys.length) {
+              reject(false);
+            }
+          });
+        });
+
+        delPromise.then((resp) => {});
+      }
+    });
+  });
 
   socket.on("disconnect", function (data) {
     console.log("Socket has been disconnected: ", data);

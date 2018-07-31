@@ -56,8 +56,8 @@ var postPay = function (body, token, callback) {
                 "currency": "USD",
                 "quantity": 1
             }],
-            "return_url": "http://192.168.1.42:3001/payment/exitoso",
-            "cancel_url": "http://192.168.1.42:3001/payment/cancelado"
+            "return_url": restUrl.exitoso,
+            "cancel_url": restUrl.cancelado
         },
         headers: {
             "Content-Type": "application/json",
@@ -100,8 +100,8 @@ var postCards = function (body, token, callback) {
                     "currency": "USD",
                     "quantity": 1
                 }],
-                "return_url": "http://192.168.1.42:3001/payment/exitoso",
-                "cancel_url": "http://192.168.1.42:3001/payment/cancelado"
+                "return_url": restUrl.exitoso,
+                "cancel_url": restUrl.cancelado
             }
         },
         headers: {
