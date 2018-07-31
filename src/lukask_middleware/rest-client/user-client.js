@@ -22,6 +22,7 @@ var getUserProfile = function (userId, token, callback) {
     }
 
     var get = client.get(restUrl.user + userId + "/", args, function (data, response) {
+        console.log("data....... en middle........................................");
         console.log(data);
         callback(response.statusCode, data);
     });
@@ -77,7 +78,7 @@ var patchUser = function (userId, body, file, token, callback) {
     form.append('person.birthdate', body.birthdate);
     form.append('person.province', body.province);
     form.append('person.canton', body.canton);
-    form.append('person.parroquia', body.parroquia);
+    form.append('person.parish', body.parroquia);
     form.append('is_active', body.is_active);
 
     if (file) {
