@@ -10,5 +10,8 @@ module.exports = {
     card: 'http://192.168.1.22:3000/card',
     exitoso:'http://192.168.1.42:3001/payment/exitoso',
     checkout:'http://192.168.1.22:3000',
-    cancelado:'http://192.168.1.22:3000/cancelado'
+    cancelado:'http://192.168.1.22:3000/cancelado',
+    province: 'http://192.168.1.56:8081/lukask-api/province/',
+    canton: 'http://192.168.1.56:8081/lukask-api/canton/',
+    parroquia: 'http://192.168.1.56:8081/lukask-api/parish/',
 }

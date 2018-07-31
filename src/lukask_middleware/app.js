@@ -34,6 +34,7 @@ var bodyParser = require('body-parser');
 /**
  * ///////////////////////////ROUTES://///////////////////////
  */
+var signInRoute = require('./routes/signIn.js');
 var notificationRoute = require('./routes/notification');
 var userRoute = require('./routes/user');
 var relevanceRoute = require('./routes/relevance');
@@ -41,7 +42,9 @@ var commentRoute = require('./routes/comment');
 var qtypeRoute = require('./routes/qtype');
 var publicationsRoute = require('./routes/publications');
 var loginRoute = require('./routes/login');
-//Ruta para mis Pagos
+var provinciaRoute = require('./routes/province');
+var cantonRoute = require('./routes/canton');
+var parroquiaRoute = require('./routes/parroquia');
 var paymentsRoute = require('./routes/payments');
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -137,7 +140,7 @@ app.use(function (req, res, next) {
 var midGetClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
 app.use(function (req, res, next) {
   //REF: https://stackoverflow.com/questions/12525928/how-to-get-request-path-with-express-req-object
-  if (req.originalUrl.indexOf('login') === -1 && req.originalUrl.indexOf('logout') === -1 && req.originalUrl.indexOf('exitoso') === -1) {
+  if (req.originalUrl.indexOf('parroquia') === -1 && req.originalUrl.indexOf('canton') === -1 && req.originalUrl.indexOf('province') === -1 && req.originalUrl.indexOf('signIn') === -1 && req.originalUrl.indexOf('login') === -1 && req.originalUrl.indexOf('logout') === -1 && req.originalUrl.indexOf('exitoso') === -1) {
     console.log("Express sessions controling middleware");
 
     let workerOrigin = req.headers['pass-key'];
@@ -367,6 +370,7 @@ app.use(function (req, res, next) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+app.use('/signIn', signInRoute);
 app.use('/notification', notificationRoute);
 app.use('/user', userRoute);
 app.use('/relevance', relevanceRoute);
@@ -374,6 +378,9 @@ app.use('/comment', commentRoute);
 app.use('/qtype', qtypeRoute);
 app.use('/publication', publicationsRoute);
 app.use('/login', loginRoute);
+app.use('/province', provinciaRoute);
+app.use('/canton', cantonRoute);
+app.use('/parroquia', parroquiaRoute);
 //Pagos//
 app.use('/payment', paymentsRoute);
 
