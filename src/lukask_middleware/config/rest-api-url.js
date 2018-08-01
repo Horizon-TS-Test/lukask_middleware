@@ -8,7 +8,7 @@ module.exports = {
     postNotif: 'http://ec2-52-67-204-187.sa-east-1.compute.amazonaws.com:8080/lukask-api/notification/',
     pay: 'http://ec2-54-233-77-31.sa-east-1.compute.amazonaws.com:3000/pagar',
     card: 'http://ec2-54-233-77-31.sa-east-1.compute.amazonaws.com:3000/card',
-    exitoso:'http://192.168.1.62:3001/payment/exitoso',
+    exitoso:'http://ec2-18-231-94-189.sa-east-1.compute.amazonaws.com:3001/payment/exitoso',
     checkout:'http://ec2-54-233-77-31.sa-east-1.compute.amazonaws.com:3000',
     cancelado:'http://ec2-54-233-77-31.sa-east-1.compute.amazonaws.com:3000/cancelado',
 	province: 'http://ec2-52-67-204-187.sa-east-1.compute.amazonaws.com:8080/lukask-api/province/',
