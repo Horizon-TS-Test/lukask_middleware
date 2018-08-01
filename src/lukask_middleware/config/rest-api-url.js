@@ -1,14 +1,14 @@
 module.exports = {
-    pub: 'http://192.168.1.56:8081/lukask-api/publication/',
-    action: 'http://192.168.1.56:8081/lukask-api/actionPub/',
-    quejaType: 'http://192.168.1.56:8081/lukask-api/typePub/',
-    login: 'http://192.168.1.56:8081/lukask-api/login/',
-    user: 'http://192.168.1.56:8081/lukask-api/userProfile/',
- 	getNotif: 'http://192.168.1.56:8081/lukask-api/notification_received/',
-    postNotif: 'http://192.168.1.56:8081/lukask-api/notification/',
-    pay: 'http://192.168.1.22:3000/pagar',
-    card: 'http://192.168.1.22:3000/card',
-    exitoso:'http://192.168.1.42:3001/payment/exitoso',
-    checkout:'http://192.168.1.22:3000',
-    cancelado:'http://192.168.1.22:3000/cancelado'
+    pub: 'http://ec2-52-67-204-187.sa-east-1.compute.amazonaws.com:8080/lukask-api/publication/',
+    action: 'http://ec2-52-67-204-187.sa-east-1.compute.amazonaws.com:8080/lukask-api/actionPub/',
+    quejaType: 'http://ec2-52-67-204-187.sa-east-1.compute.amazonaws.com:8080/lukask-api/typePub/',
+    login: 'http://ec2-52-67-204-187.sa-east-1.compute.amazonaws.com:8080/lukask-api/login/',
+    user: 'http://ec2-52-67-204-187.sa-east-1.compute.amazonaws.com:8080/lukask-api/userProfile/',
+ 	getNotif: 'http://ec2-52-67-204-187.sa-east-1.compute.amazonaws.com:8080/lukask-api/notification_received/',
+    postNotif: 'http://ec2-52-67-204-187.sa-east-1.compute.amazonaws.com:8080/lukask-api/notification/',
+    pay: 'http://ec2-54-233-77-31.sa-east-1.compute.amazonaws.com:3000/pagar',
+    card: 'http://ec2-54-233-77-31.sa-east-1.compute.amazonaws.com:3000/card',
+    exitoso:'http://192.168.1.62:3001/payment/exitoso',
+    checkout:'http://ec2-54-233-77-31.sa-east-1.compute.amazonaws.com:3000',
+    cancelado:'http://ec2-54-233-77-31.sa-east-1.compute.amazonaws.com:3000/cancelado'
 }
