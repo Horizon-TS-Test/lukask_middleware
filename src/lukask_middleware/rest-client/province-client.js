@@ -1,30 +1,31 @@
-var webpush = require('./../config/push-api');
+var restUrl = require('./../config/rest-api-url');
 var Client = require("node-rest-client").Client;
 
-var notify = function (receivers, callback) {
+var getProvince = function (callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
 
-    //POST METHOD:
+    //GET METHOD:
     var args = {
-        data: {
-            "receivers": receivers
-        },
         headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "application/json"
         }
     }
-
-    var post = client.post(webpush.webpush_url, args, function (data, response) {
+    console.log("province client....");
+    var get = client.get(restUrl.province, args, function (data, response) {
+        console.log(data);
         callback(response.statusCode, data);
     });
 
-    post.on("error", function (err) {
+    get.on("error", function (err) {
+        console.log(err);
         callback(500, err.code);
     });
+    ////
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
 module.exports = {
-    notify: notify
+    getProvince: getProvince,
 }
