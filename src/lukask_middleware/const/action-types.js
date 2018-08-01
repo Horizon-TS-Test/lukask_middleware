@@ -1,4 +1,4 @@
 module.exports = {
-    comment: "0e4d5766-808f-4d87-958c-96d0dc28d3b1",
-    relevance: "11029613-985c-464c-8c1f-5034cb0f1a0a"
+    comment: "15d2e91d-dd49-4480-9ee4-76a4c8ae3261",
+    relevance: "354f3ad5-4d57-463d-b7d3-0ce515b90c05"
 }
