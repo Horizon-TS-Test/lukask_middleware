@@ -1,15 +1,14 @@
 var restUrl = require('./../config/rest-api-url');
 var Client = require("node-rest-client").Client;
 
-var getParroquia = function (parroquia_id, token, callback) {
+var getParroquia = function (parroquia_id, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
 
     //GET METHOD:
     var args = {
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Token " + token
+            "Content-Type": "application/json"
         }
     }
 

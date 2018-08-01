@@ -53,10 +53,12 @@ router.post('/:user_id', upload.single('user_file'), function (req, res, next) {
  * MÉTODO PARA REGISTRAR UN USUARIO
  */
 router.post('/', upload.single('user_file'), function (req, res, next) {
-  let token = req.session.key.token;
+  console.log("llegue");
+  console.log("middle............");
+  //let token = req.session.key.token;
   /*console.log("Erroes de middle ware......................");
   console.log(req.body);*/
-  userRestClient.postUser(req.body, req.file, token, function (responseCode, data) {
+  userRestClient.postUser(req.body, req.file,  function (responseCode, data) {
     if (responseCode == 201) {
       return res.status(responseCode).json({
         code: responseCode,
@@ -102,6 +104,7 @@ router.get('/', function (req, res, next) {
   });
 });
 
+/*
 router.post('/:user_id', upload.single('user_file'), function (req, res, next) {
   let token = req.session.key.token;
   let user_id = req.params.user_id;
@@ -121,6 +124,6 @@ router.post('/:user_id', upload.single('user_file'), function (req, res, next) {
     });
   });
 
-});
+});*/
 
 module.exports = router;

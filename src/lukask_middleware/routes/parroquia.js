@@ -4,10 +4,9 @@ var router = express.Router();
 var parroquiaRestClient = require('./../rest-client/parroquia-client');
 
 router.get('/:canton_id', function (req, res, next) {
-    let token = req.session.key.token;
     let canton_id = req.params.canton_id;
 
-    parroquiaRestClient.getParroquia(canton_id, token, function (responseCode, data) {
+    parroquiaRestClient.getParroquia(canton_id, function (responseCode, data) {
         if (responseCode == 200) {
             return res.status(responseCode).json({
                 code: responseCode,

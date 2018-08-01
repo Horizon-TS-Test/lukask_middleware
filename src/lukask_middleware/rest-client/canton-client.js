@@ -1,7 +1,7 @@
 var restUrl = require('./../config/rest-api-url');
 var Client = require("node-rest-client").Client;
 
-var getCanton = function (provincia_id, token, callback) {
+var getCanton = function (provincia_id, callback) {
     console.log("siiiii..................");
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
@@ -9,8 +9,7 @@ var getCanton = function (provincia_id, token, callback) {
     //GET METHOD:
     var args = {
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Token " + token
+            "Content-Type": "application/json"
         }
     }
 

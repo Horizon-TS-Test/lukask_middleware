@@ -4,9 +4,8 @@ var router = express.Router();
 var provinceRestClient = require('./../rest-client/province-client');
 
 router.get('/', function (req, res, next) {
-    let token = req.session.key.token;
-
-    provinceRestClient.getProvince(token, function (responseCode, data) {
+    console.log("llego....");
+    provinceRestClient.getProvince(function (responseCode, data) {
         if (responseCode == 200) {
             return res.status(responseCode).json({
                 code: responseCode,

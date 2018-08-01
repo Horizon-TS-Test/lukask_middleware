@@ -10,11 +10,11 @@ var upload = multer({ dest: 'tmp_uploads/' });
  * MÉTODO PARA REGISTRAR UN USUARIO
  */
 router.post('/', upload.single('user_file'), function (req, res, next) {
-  let token = req.session.key.token;
+  //let token = req.session.key.token;
   console.log("Post cliente");
   console.log(req.body);
 
-  userRestClient.postUser(req.body, req.file, token, function (responseCode, data) {
+  userRestClient.postUser(req.body, req.file,  function (responseCode, data) {
     if (responseCode == 201) {
       return res.status(responseCode).json({
         code: responseCode,

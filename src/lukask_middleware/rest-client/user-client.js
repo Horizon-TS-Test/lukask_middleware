@@ -123,14 +123,14 @@ var patchUser = function (userId, body, file, token, callback) {
     //////////////////////////////////////////////////////////////////////////////////////
 }
 
-var postUser = function (body, file, token, callback) {
+/*Para un nuevo registro*/ 
+var postUser = function (body, file,  callback) {
     ////////////////////////////////// POST REQUEST //////////////////////////////////////
     var r = request.post(
         {
             url: restUrl.user,
             headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                "Authorization": "Token " + token
+                "Content-Type": "application/x-www-form-urlencoded"
             }
         }, function optionalCallback(err, httpResponse, data) {
             if (err) {

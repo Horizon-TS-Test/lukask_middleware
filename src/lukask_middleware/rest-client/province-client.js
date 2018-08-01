@@ -1,18 +1,17 @@
 var restUrl = require('./../config/rest-api-url');
 var Client = require("node-rest-client").Client;
 
-var getProvince = function (token, callback) {
+var getProvince = function (callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
 
     //GET METHOD:
     var args = {
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Token " + token
+            "Content-Type": "application/json"
         }
     }
-
+    console.log("province client....");
     var get = client.get(restUrl.province, args, function (data, response) {
         console.log(data);
         callback(response.statusCode, data);
