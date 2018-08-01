@@ -1,11 +1,14 @@
 module.exports = {
-    /*login: 'http://192.168.100.159:8080/api/login/',
-    todo: 'http://192.168.100.159:8080/api/todo/',
-    profile: 'http://192.168.100.159:8080/api/profile/'*/
-    login: 'http://192.168.1.31:8080/api/login/',
-    todo: 'http://192.168.1.31:8080/api/todo/',
-    profile: 'http://192.168.1.31:8080/api/profile/'
-    /*login: 'http://10.0.2.2:8080/api/login/',
-    todo: 'http://10.0.2.2:8080/api/todo/',
-    profile: 'http://10.0.2.2:8080/api/profile/'*/
+    pub: 'http://192.168.1.56:8081/lukask-api/publication/',
+    action: 'http://192.168.1.56:8081/lukask-api/actionPub/',
+    quejaType: 'http://192.168.1.56:8081/lukask-api/typePub/',
+    login: 'http://192.168.1.56:8081/lukask-api/login/',
+    user: 'http://192.168.1.56:8081/lukask-api/userProfile/',
+ 	getNotif: 'http://192.168.1.56:8081/lukask-api/notification_received/',
+    postNotif: 'http://192.168.1.56:8081/lukask-api/notification/',
+    pay: 'http://192.168.1.22:3000/pagar',
+    card: 'http://192.168.1.22:3000/card',
+    exitoso:'http://192.168.1.42:3001/payment/exitoso',
+    checkout:'http://192.168.1.22:3000',
+    cancelado:'http://192.168.1.22:3000/cancelado'
 }
