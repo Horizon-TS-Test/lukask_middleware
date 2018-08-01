@@ -64,10 +64,29 @@ var cryptoGen = require('./tools/crypto-generator');
 var redisClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-var app = express( 
+/*var app = express( 
   console.log("Inicio")
 );
-var server = require("http").Server(app);
+var server = require("http").Server(app);*/
+
+////////////// SERVER CONFIGURATIONS /////////////////
+var https = require('https');
+var fs = require('fs');
+
+var app = express(
+  console.log("Starter server midd Env. pre-production")
+);
+
+////////// CERTIFICADOS DE SEGURIDAD.
+var options = {
+  key : fs.readFileSync('keys/server.key'),
+  cert : fs.readFileSync('keys/server.crt')
+}
+
+/////////// INICIALIZAMOS SERVIDORES.
+//var server = require("http").Server(app);
+var server  = https.createServer(options, app);
+
 var io = require("socket.io")(server);
 
 app.set('views', path.join(__dirname, 'views'));
