@@ -33,7 +33,7 @@ router.get('/exitoso', function (req, res, next) {
     }
     payClient.set(paypalsecret, JSON.stringify(redisData));
     if (responseCode == 200) {
-        return res.redirect('http://192.168.1.2:8080');
+        return res.redirect('http://192.168.1.2:8080/inicio');
     }
     return res.status(responseCode).json({
       code: responseCode,
@@ -51,7 +51,7 @@ router.get('/cancelado', function (req, res, next) {
   let token = req.session.key.token;
   paymentRestClient.getCancelado(body, token, function (responseCode, data) {
     if (responseCode == 200) {
-      return res.redirect('http://192.168.1.2:8080');
+      return res.redirect('http://192.168.1.2:8080/inicio');
     }
     return res.status(responseCode).json({
       code: responseCode,
