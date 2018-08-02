@@ -1,3 +1,3 @@
 module.exports = {
-    webpush_url: 'http://ec2-54-233-77-31.sa-east-1.compute.amazonaws.com:3003/notification'
+    webpush_url: 'http://ec2-18-228-7-103.sa-east-1.compute.amazonaws.com:3003/notification'
 }
