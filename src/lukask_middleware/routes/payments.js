@@ -33,7 +33,8 @@ router.get('/exitoso', function (req, res, next) {
     }
     payClient.set(paypalsecret, JSON.stringify(redisData));
     if (responseCode == 200) {
-        return res.redirect('https://www.lukask.horizon-ts.com/inicio');
+        //return res.redirect('https://www.lukask.horizon-ts.com/inicio');
+        return res.redirect('https://127.0.0.1:4200/inicio');
     }
     return res.status(responseCode).json({
       code: responseCode,
@@ -51,7 +52,8 @@ router.get('/cancelado', function (req, res, next) {
   let token = req.session.key.token;
   paymentRestClient.getCancelado(body, token, function (responseCode, data) {
     if (responseCode == 200) {
-      return res.redirect('https://www.lukask.horizon-ts.com/inicio');
+      //return res.redirect('https://www.lukask.horizon-ts.com/inicio');
+      return res.redirect('https://127.0.0.1:4200/inicio');
     }
     return res.status(responseCode).json({
       code: responseCode,
