@@ -85,7 +85,7 @@ var options = {
 
 /////////// INICIALIZAMOS SERVIDORES.
 //var server = require("http").Server(app);
-//var server  = https.createServer(options, app);
+var server  = https.createServer(options, app);
 
 var io = require("socket.io")(server);
 
