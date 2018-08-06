@@ -70,22 +70,22 @@ var app = express(
 var server = require("http").Server(app);
 
 ////////////// SERVER CONFIGURATIONS /////////////////
-/*var https = require('https');
+var https = require('https');
 var fs = require('fs');
 
 var app = express(
   console.log("Starter server midd Env. pre-production")
 );
-*/
+
 ////////// CERTIFICADOS DE SEGURIDAD.
-/*var options = {
+var options = {
   key : fs.readFileSync('keys/server.key'),
   cert : fs.readFileSync('keys/server.crt')
-}*/
+}
 
 /////////// INICIALIZAMOS SERVIDORES.
-var server = require("http").Server(app);
-//var server  = https.createServer(options, app);
+//var server = require("http").Server(app);
+var server  = https.createServer(options, app);
 
 var io = require("socket.io")(server);
 
