@@ -64,9 +64,7 @@ var cryptoGen = require('./tools/crypto-generator');
 var redisClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-var app = express( 
-  console.log("Inicio")
-);
+var app = express();
 var server = require("http").Server(app);
 var io = require("socket.io")(server);
 
@@ -131,114 +129,45 @@ app.use(function (req, res, next) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
  * //MIDDLEWARE METHOD USED TO ENSURE USERS MUST BE LOGGED FIRST:
  */
-
-var midGetClient = redis.createClient({ host: redisAuth.host, port: redisAuth.port, password: redisAuth.password });
 app.use(function (req, res, next) {
   //REF: https://stackoverflow.com/questions/12525928/how-to-get-request-path-with-express-req-object
   if (req.originalUrl.indexOf('parroquia') === -1 && req.originalUrl.indexOf('canton') === -1 && req.originalUrl.indexOf('province') === -1 && req.originalUrl.indexOf('signIn') === -1 && req.originalUrl.indexOf('login') === -1 && req.originalUrl.indexOf('logout') === -1 && req.originalUrl.indexOf('exitoso') === -1) {
     console.log("Express sessions controling middleware");
-
-    let workerOrigin = req.headers['pass-key'];
-    if (workerOrigin) {
-      console.log(workerOrigin);
-      //IF THE SERVICE WORKER SENDS A BACKGROUND SYNC REQUEST:
-      let listPromise = new Promise((resolve, reject) => {
-        redisClient.keys("sess:*", function (error, keys) {
-          if (keys.length == 0) {
-            reject(false);
-          }
-          for (let i = 0; i < keys.length; i++) {
-            let getPromise = new Promise((resolve, reject) => {
-              midGetClient.get(keys[i], function (err, reply) {
-                let keyData = JSON.parse(reply);
-                if (keyData.key) {
-                  if (keyData.key.crypto_user_id == workerOrigin) {
-                    req.session["key"] = {
-                      crypto_user_id: workerOrigin,
-                      token: keyData.key.token
-                    }
-                    resolve(true);
-                  }
-                  else if (i + 1 == keys.length) {
-                    reject(false);
-                  }
-                }
-                else if (i + 1 == keys.length) {
-                  reject(false);
-                }
-              });
-            });
-
-            getPromise.then((isEqual) => {
-              if (isEqual) {
-                resolve(true);
-              }
-            }).catch((err) => {
-              console.log("[LUKASK MIDDLEWARE] No existe registro de sesión del cliente Service Worker");
-              reject(false);
-            });
-          }
-        });
+    if (!req.session.key) {
+      return res.status(401).json({
+        code: 401,
+        title: "Not Authenticated",
+        data: "You must be logged first."
       });
-
-      listPromise.then((isThereToken) => {
-        if (isThereToken) {
-          next();
-        }
-      }).catch((err) => {
-        return res.status(401).json({
-          code: 401,
-          title: "Not Authorized",
-          data: "Invalid user credentials"
-        });
-      });
-
-      ////
     }
-    else {
-      if (!req.session.key) {
-        return res.status(401).json({
-          code: 401,
-          title: "Not Authenticated",
-          data: "You must be logged first."
-        });
-      }
 
-      console.log(req.session.key);
+    let localEncrypted = req.session.key.crypto_user_id;
+    if (!req.headers['x-access-token']) {
+      return res.status(401).json({
+        code: 401,
+        title: "Not Authorized",
+        data: "You must provide user credentials"
+      });
+    }
+    //REF: https://scotch.io/tutorials/authenticate-a-node-js-api-with-json-web-tokens
+    let userEncrypted = req.headers['x-access-token'];
 
-      let localEncrypted = req.session.key.crypto_user_id;
-      if (!req.headers['x-access-token']) {
-        return res.status(401).json({
-          code: 401,
-          title: "Not Authorized",
-          data: "You must provide user credentials"
-        });
-      }
-      //REF: https://scotch.io/tutorials/authenticate-a-node-js-api-with-json-web-tokens
-      let userEncrypted = req.headers['x-access-token'];
+    console.log("userEncrypted", cryptoGen.decrypt(userEncrypted));
+    console.log("localEncrypted", cryptoGen.decrypt(localEncrypted));
 
-      console.log("userEncrypted", cryptoGen.decrypt(userEncrypted));
-      console.log("localEncrypted", cryptoGen.decrypt(localEncrypted));
-
-      if (!(localEncrypted.content === userEncrypted.content && cryptoGen.decrypt(localEncrypted) === cryptoGen.decrypt(userEncrypted))) {
-        return res.status(401).json({
-          code: 401,
-          title: "Not Authorized",
-          data: "Invalid user credentials"
-        });
-      }
-
-      next();
+    if (!(localEncrypted.content === userEncrypted.content && cryptoGen.decrypt(localEncrypted) === cryptoGen.decrypt(userEncrypted))) {
+      return res.status(401).json({
+        code: 401,
+        title: "Not Authorized",
+        data: "Invalid user credentials"
+      });
     }
   }
-  else {
-    next();
-  }
+  next();
 });
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -302,7 +231,7 @@ io.on("connection", function (socket) {
             let keyData = JSON.parse(pay);
             if (keyData.crypto_user_id == socket.request.session.key.crypto_user_id) {
               //REF: https://stackoverflow.com/questions/8281382/socket-send-outside-of-io-sockets-on
-              console.log("keyData.paypalData",keyData.paypalData);
+              console.log("keyData.paypalData", keyData.paypalData);
               /////////////////////// ENVIO DEL DATO EN EL SOCKET ///////////////////////
               socket.emit("response-payment", JSON.stringify(keyData.paypalData));
               resolve(true);
@@ -312,12 +241,12 @@ io.on("connection", function (socket) {
           });
         });
 
-        getPromise.then((resp) => {});
+        getPromise.then((resp) => { });
       }
     });
   }
 
-  socket.on("confirm-pay", function(data) {
+  socket.on("confirm-pay", function (data) {
     console.log("User confirm", data);
     console.log("Soket cripto:", socket.request.session.key.crypto_user_id);
 
@@ -334,7 +263,7 @@ io.on("connection", function (socket) {
             let keyData = JSON.parse(pay);
             if (keyData.crypto_user_id == socket.request.session.key.crypto_user_id) {
               //REF: https://stackoverflow.com/questions/8281382/socket-send-outside-of-io-sockets-on
-              console.log("keyData.paypalData",keyData.paypalData);
+              console.log("keyData.paypalData", keyData.paypalData);
               delCli.del(keys[i]);
               resolve(true);
             } else if (i + 1 == keys.length) {
@@ -343,7 +272,7 @@ io.on("connection", function (socket) {
           });
         });
 
-        delPromise.then((resp) => {});
+        delPromise.then((resp) => { });
       }
     });
   });
@@ -605,57 +534,6 @@ client.on('connect', function (connection) {
 client.connect('ws://' + servers.backend_websocket + '/lukask-api', "", "http://" + servers.backend_websocket);
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/**
- * ////////////////////////////CLIENT FROM PYTHON'S TORNADO WEBSOCKET/////////////////////
- */
-var WebSocketClient = require('websocket').client;
-
-var client = new WebSocketClient();
-
-client.on('connectFailed', function (error) {
-  console.log('Tornado Websocket Connect Error: ' + error.toString());
-});
-
-client.on('connect', function (connection) {
-  console.log('Tornado Websocket client connected');
-
-  connection.on('error', function (error) {
-    console.log("Tornado Websocket Error: " + error.toString());
-  });
-
-  // TORNADO WEBSOCKET AUTHENTICTION PROCESS:
-  connection.send(JSON.stringify({ event: "middle_auth", data: { token: backend_cred.backend_cli_token } }));
-  ////
-
-  connection.on('message', function (message) {
-    if (message.type === 'utf8') {
-      console.log("Tornado Websocket data received: ", JSON.parse(message.utf8Data));
-      // SOCKET.IO CLIENTS LOGGED CONTROL:
-      //REF: https://stackoverflow.com/questions/35249770/how-to-get-all-the-sockets-connected-to-socket-io
-      Object.keys(io.sockets.sockets).forEach(function (id) {
-        console.log("Sending data to socket with ID: ", id)  // socketId
-        if (io.sockets.connected[id].request.session.key) {
-          //REF: https://stackoverflow.com/questions/8281382/socket-send-outside-of-io-sockets-on
-          io.sockets.connected[id].emit("dbserver-rules", JSON.parse(message.utf8Data));
-        }
-      })
-      ////
-    }
-  });
-
-  connection.on('close', function () {
-    console.log('Tornado Websocket echo-protocol Connection Closed');
-  });
-});
-
-client.connect('ws://' + servers.tornado_websocket + '/ws/ws_db_pubsub', "", "http://" + servers.tornado_websocket);
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
