@@ -1,7 +1,7 @@
 var restUrl = require('./../config/rest-api-url');
 var Client = require("node-rest-client").Client;
 
-var getParroquia = function (parroquia_id, callback) {
+var getParroquia = function (canton_id, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
 
@@ -12,7 +12,8 @@ var getParroquia = function (parroquia_id, callback) {
         }
     }
 
-    var get = client.get(restUrl.canton + parroquia_id + "/", args, function (data, response) {
+    var get = client.get(restUrl.parroquia + "?canton=" + canton_id, args, function (data, response) {
+        console.log(data);
         callback(response.statusCode, data);
     });
 

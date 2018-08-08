@@ -2,7 +2,6 @@ var restUrl = require('./../config/rest-api-url');
 var Client = require("node-rest-client").Client;
 
 var getCanton = function (provincia_id, callback) {
-    console.log("siiiii..................");
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
 
@@ -13,7 +12,7 @@ var getCanton = function (provincia_id, callback) {
         }
     }
 
-    var get = client.get(restUrl.province + provincia_id + "/", args, function (data, response) {
+    var get = client.get(restUrl.canton + "?province=" + provincia_id, args, function (data, response) {
         console.log(data);
         callback(response.statusCode, data);
     });

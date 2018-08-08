@@ -3,20 +3,15 @@ var router = express.Router();
 
 var cantonRestClient = require('./../rest-client/canton-client');
 
-router.get('/:province_id', function (req, res, next) {
-    console.log("Paso a middle ware.......................");
-    
- 
-    let pronvince_id = req.params.province_id;
+router.get('/', function (req, res, next) {
+    let province_id = req.query.province_id;
 
-    cantonRestClient.getCanton(pronvince_id, function (responseCode, data) {
-        console.log("Datos dede demiddle");
-        console.log(data.cantons);
+    cantonRestClient.getCanton(province_id, function (responseCode, data) {
         if (responseCode == 200) {
             return res.status(responseCode).json({
                 code: responseCode,
                 title: "Successfully retrieving of canton data",
-                data: data.cantons
+                data: data
             });
         }
         return res.status(responseCode).json({

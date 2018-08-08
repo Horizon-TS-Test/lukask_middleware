@@ -3,8 +3,8 @@ var router = express.Router();
 
 var parroquiaRestClient = require('./../rest-client/parroquia-client');
 
-router.get('/:canton_id', function (req, res, next) {
-    let canton_id = req.params.canton_id;
+router.get('/', function (req, res, next) {
+    let canton_id = req.query.canton_id;
 
     parroquiaRestClient.getParroquia(canton_id, function (responseCode, data) {
         if (responseCode == 200) {
