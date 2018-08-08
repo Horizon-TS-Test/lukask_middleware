@@ -11,7 +11,6 @@ var getProvince = function (callback) {
             "Content-Type": "application/json"
         }
     }
-    console.log("province client....");
     var get = client.get(restUrl.province, args, function (data, response) {
         console.log(data);
         callback(response.statusCode, data);

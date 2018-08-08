@@ -11,14 +11,13 @@ router.post('/', function (req, res, next) {
   let token = req.session.key.token;
   let relevanceType = actionTypes.relevance;
   req.body.action_type = relevanceType;
-
+  
   actionRestClient.postAction(req.body, null, token, function (responseCode, data) {
     if (responseCode == 201 || responseCode == 200) {
       let userNotif = data.receivers;
       let ownerPubName, ownerComName;
       let ownerPubId, ownerComId;
 
-      console.log("req.body", req.body)
       if (req.body.active === true && userNotif.length > 0) {
         if (data.pub_owner) {
           ownerPubName = data.pub_owner.user_name;

@@ -247,8 +247,7 @@ io.on("connection", function (socket) {
   }
 
   socket.on("confirm-pay", function (data) {
-    console.log("User confirm", data);
-    console.log("Soket cripto:", socket.request.session.key.crypto_user_id);
+    console.log("User has confirmed the payment registration finish");
 
     var delCli = redis.createClient({
       host: redisAuth.host,
@@ -263,7 +262,6 @@ io.on("connection", function (socket) {
             let keyData = JSON.parse(pay);
             if (keyData.crypto_user_id == socket.request.session.key.crypto_user_id) {
               //REF: https://stackoverflow.com/questions/8281382/socket-send-outside-of-io-sockets-on
-              console.log("keyData.paypalData", keyData.paypalData);
               delCli.del(keys[i]);
               resolve(true);
             } else if (i + 1 == keys.length) {
