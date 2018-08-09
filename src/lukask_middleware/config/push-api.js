@@ -1,3 +1,3 @@
 module.exports = {
-    webpush_url: 'https://push.lukaksarticles.com//notification'
+    webpush_url: 'https://push.lukaksarticles.com/notification'
 }
