@@ -135,7 +135,7 @@ app.use(function (req, res, next) {
  */
 app.use(function (req, res, next) {
   //REF: https://stackoverflow.com/questions/12525928/how-to-get-request-path-with-express-req-object
-  if (req.originalUrl.indexOf('parroquia') === -1 && req.originalUrl.indexOf('canton') === -1 && req.originalUrl.indexOf('province') === -1 && req.originalUrl.indexOf('signIn') === -1 && req.originalUrl.indexOf('login') === -1 && req.originalUrl.indexOf('logout') === -1 && req.originalUrl.indexOf('exitoso') === -1) {
+  if (req.originalUrl.indexOf('images') === -1 && req.originalUrl.indexOf('parroquia') === -1 && req.originalUrl.indexOf('canton') === -1 && req.originalUrl.indexOf('province') === -1 && req.originalUrl.indexOf('signIn') === -1 && req.originalUrl.indexOf('login') === -1 && req.originalUrl.indexOf('logout') === -1 && req.originalUrl.indexOf('exitoso') === -1) {
     console.log("Express sessions controling middleware");
     if (!req.session.key) {
       return res.status(401).json({

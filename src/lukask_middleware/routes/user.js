@@ -2,9 +2,23 @@ var express = require('express');
 var router = express.Router();
 
 var userRestClient = require('./../rest-client/user-client');
+
 /////////////////////// FILE UPLOAD ////////////////////////
+const pubMediaDest = 'public/images/profiles';
+//REF: https://www.npmjs.com/package/multer
 var multer = require("multer");
-var upload = multer({ dest: 'tmp_uploads/' });
+var storage = multer.diskStorage(
+  {
+    destination: function (req, file, cb) {
+      cb(null, pubMediaDest)
+    },
+    filename: function (req, file, cb) {
+      cb(null, req.params.user_id + '-' + Date.now() + ".png")
+    }
+  }
+);
+var upload = multer({ storage: storage });
+////////////////////////////////////////////////////////////
 
 router.get('/:user_id', function (req, res, next) {
   let userId = req.params.user_id;
@@ -33,7 +47,15 @@ router.post('/:user_id', upload.single('user_file'), function (req, res, next) {
   let token = req.session.key.token;
   let user_id = req.params.user_id;
 
-  userRestClient.patchUser(user_id, req.body, req.file, token, function (responseCode, data) {
+  let dest, mediaProfile;
+
+  if (req.file) {
+    dest = req.file.path;
+    dest = dest.replace("public/", "");
+    mediaProfile = "/" + dest;
+  }
+
+  userRestClient.patchUser(user_id, req.body, mediaProfile, token, function (responseCode, data) {
     if (responseCode == 200) {
       return res.status(responseCode).json({
         code: responseCode,
@@ -53,12 +75,18 @@ router.post('/:user_id', upload.single('user_file'), function (req, res, next) {
  * MÉTODO PARA REGISTRAR UN USUARIO
  */
 router.post('/', upload.single('user_file'), function (req, res, next) {
-  console.log("llegue");
-  console.log("middle............");
-  //let token = req.session.key.token;
-  /*console.log("Erroes de middle ware......................");
-  console.log(req.body);*/
-  userRestClient.postUser(req.body, req.file,  function (responseCode, data) {
+  let dest, mediaProfile;
+
+  if (req.file) {
+    dest = req.file.path;
+    dest = dest.replace("public/", "");
+    mediaProfile = "/" + dest;
+  }
+  else {
+    mediaProfile = "/images/default-profile.png";
+  }
+
+  userRestClient.postUser(req.body, mediaProfile, function (responseCode, data) {
     if (responseCode == 201) {
       return res.status(responseCode).json({
         code: responseCode,
@@ -103,27 +131,5 @@ router.get('/', function (req, res, next) {
     });
   });
 });
-
-/*
-router.post('/:user_id', upload.single('user_file'), function (req, res, next) {
-  let token = req.session.key.token;
-  let user_id = req.params.user_id;
-
-  userRestClient.patchUser(user_id, req.body, req.file, token, function (responseCode, data) {
-    if (responseCode == 200) {
-      return res.status(responseCode).json({
-        code: responseCode,
-        title: "User has been updated successfully",
-        data: data
-      });
-    }
-    return res.status(responseCode).json({
-      code: responseCode,
-      title: "An error has occurred",
-      error: data
-    });
-  });
-
-});*/
 
 module.exports = router;

@@ -1,11 +1,22 @@
 var express = require('express');
 var router = express.Router();
-
 var publicationRestClient = require('./../rest-client/publication-client');
 
 /////////////////////// FILE UPLOAD ////////////////////////
+const pubMediaDest = 'public/images/pubs';
+//REF: https://www.npmjs.com/package/multer
 var multer = require("multer");
-var upload = multer({ dest: 'tmp_uploads/' });
+var storage = multer.diskStorage(
+  {
+    destination: function (req, file, cb) {
+      cb(null, pubMediaDest)
+    },
+    filename: function (req, file, cb) {
+      cb(null, req.body.userId + '-' + Date.now() + ".png")
+    }
+  }
+);
+var upload = multer({ storage: storage });
 ////////////////////////////////////////////////////////////
 
 var wepushClient = require('./../rest-client/webpush-client');
@@ -73,8 +84,34 @@ router.get('/', function (req, res, next) {
 
 router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
   let token = req.session.key.token;
+  let dest, mediaArray = [];
 
-  publicationRestClient.postPub(req.body, req.files, token, function (responseCode, data) {
+  if (req.files) {
+    //REF: https://stackoverflow.com/questions/10183291/how-to-get-the-full-url-in-express
+    //serverUrl = req.protocol + '://' + req.get('host');
+
+    for (var i = 0; i < req.files.length; i++) {
+      dest = req.files[i].path;
+      dest = dest.replace("public/", "");
+
+      mediaArray[mediaArray.length] = {
+        mediaType: req.files[i].mimetype.indexOf("image") != -1 ? "IG" : "FL",
+        mediaPath: "/" + dest,
+        mediaName: dest.substring(dest.indexOf("/", dest.indexOf("pubs/")))
+      };
+
+      console.log("path", mediaArray);
+    }
+  }
+  else {
+    mediaArray[mediaArray.length] = {
+      mediaType: "IG",
+      mediaPath: "/images/default.jpg",
+      mediaName: "default.jpg"
+    };
+  }
+
+  publicationRestClient.postPub(req.body, mediaArray, token, function (responseCode, data) {
     if (responseCode == 201) {
       /*let title = 'Nueva publicación registrada';
       let content = (req.body.detail.length > 100) ? req.body.detail.substring(0, 100) : req.body.detail;

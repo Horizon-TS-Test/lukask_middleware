@@ -72,7 +72,7 @@ var getUserSupporters = function (relevanceType, comRelevance, limit, offset, to
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
-var patchUser = function (userId, body, file, token, callback) {
+var patchUser = function (userId, body, mediaProfile, token, callback) {
     ////////////////////////////////// POST REQUEST //////////////////////////////////////
     var r = request.patch(
         {
@@ -87,10 +87,6 @@ var patchUser = function (userId, body, file, token, callback) {
                 callback(httpResponse.statusCode, err);
             }
             if (httpResponse.statusCode == 200) {
-                if (file) {
-                    console.log("Elimando archivo: " + file.path);
-                    fs.unlink(file.path);
-                }
                 console.log('User has been updted successfully, Server responded with: ', JSON.parse(data));
                 callback(httpResponse.statusCode, JSON.parse(data));
             }
@@ -117,14 +113,14 @@ var patchUser = function (userId, body, file, token, callback) {
     form.append('person.parish', body.parroquia);
     form.append('is_active', body.is_active);
 
-    if (file) {
-        form.append("media_profile", fs.createReadStream(file.path), { filename: file.originalname, contentType: file.mimetype });
+    if (mediaProfile) {
+        form.append("profile_path", mediaProfile);
     }
     //////////////////////////////////////////////////////////////////////////////////////
 }
 
 /*Para un nuevo registro*/ 
-var postUser = function (body, file,  callback) {
+var postUser = function (body, mediaProfile,  callback) {
     ////////////////////////////////// POST REQUEST //////////////////////////////////////
     var r = request.post(
         {
@@ -138,10 +134,6 @@ var postUser = function (body, file,  callback) {
                 callback(httpResponse.statusCode, err);
             }
             if (httpResponse.statusCode == 200) {
-                if (file) {
-                    console.log("Elimando archivo: " + file.path);
-                    fs.unlink(file.path);
-                }
                 console.log('User has been updted successfully, Server responded with: ', JSON.parse(data));
                 callback(httpResponse.statusCode, JSON.parse(data));
             }
@@ -168,8 +160,8 @@ var postUser = function (body, file,  callback) {
     form.append('is_active', "true");
     /**/
 
-    if (file) {
-        form.append("media_profile", fs.createReadStream(file.path), { filename: file.originalname, contentType: file.mimetype });
+    if (mediaProfile) {
+        form.append("profile_path", mediaProfile);
     }
     //////////////////////////////////////////////////////////////////////////////////////
 }
