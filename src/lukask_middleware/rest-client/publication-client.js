@@ -93,7 +93,7 @@ var getPubByPage = function (token, limit, offset, callback) {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
-var postPub = function (body, files, token, callback) {
+var postPub = function (body, mediaArray, token, callback) {
     ////////////////////////////////// POST REQUEST //////////////////////////////////////
     var r = request.post(
         {
@@ -108,12 +108,6 @@ var postPub = function (body, files, token, callback) {
                 callback(httpResponse.statusCode, err);
             }
             if (httpResponse.statusCode == 201) {
-                if (files) {
-                    for (var i = 0; i < files.length; i++) {
-                        console.log("Elimando archivo: " + files[i].path);
-                        fs.unlink(files[i].path);
-                    }
-                }
                 console.log('Publication has been created successfully, Server responded with: ', JSON.parse(data));
                 callback(httpResponse.statusCode, JSON.parse(data));
             }
@@ -133,12 +127,12 @@ var postPub = function (body, files, token, callback) {
     form.append('address', body.address);
     form.append('is_trans', body.is_trans);
 
-    if (files) {
-        for (var i = 0; i < files.length; i++) {
-            form.append('medios_data[' + i + ']format_multimedia', (files[0].mimetype.indexOf("image") != -1) ? "IG" : "FL");
-            form.append('medios_data[' + i + ']name_file', files[i].originalname);
+    if (mediaArray) {
+        for (var i = 0; i < mediaArray.length; i++) {
+            form.append('medios_data[' + i + ']format_multimedia', mediaArray[i].mediaType);
+            form.append('medios_data[' + i + ']name_file', mediaArray[i].mediaName);
             form.append('medios_data[' + i + ']description_file', body.detail);
-            form.append('medios_data[' + i + ']media_file', fs.createReadStream(files[i].path), { filename: files[i].originalname, contentType: files[i].mimetype });
+            form.append('medios_data[' + i + ']media_path', mediaArray[i].mediaPath);
         }
     }
     //////////////////////////////////////////////////////////////////////////////////////
