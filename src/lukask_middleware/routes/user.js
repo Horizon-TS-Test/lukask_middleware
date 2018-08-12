@@ -71,37 +71,6 @@ router.post('/:user_id', upload.single('user_file'), function (req, res, next) {
   });
 });
 
-/**
- * MÉTODO PARA REGISTRAR UN USUARIO
- */
-router.post('/', upload.single('user_file'), function (req, res, next) {
-  let dest, mediaProfile;
-
-  if (req.file) {
-    dest = req.file.path;
-    dest = dest.replace("public/", "");
-    mediaProfile = "/" + dest;
-  }
-  else {
-    mediaProfile = "/images/default-profile.png";
-  }
-
-  userRestClient.postUser(req.body, mediaProfile, function (responseCode, data) {
-    if (responseCode == 201) {
-      return res.status(responseCode).json({
-        code: responseCode,
-        title: "User has been updated successfully",
-        data: data
-      });
-    }
-    return res.status(responseCode).json({
-      code: responseCode,
-      title: "An error has occurred",
-      error: data
-    });
-  });
-});
-
 router.get('/', function (req, res, next) {
   if (!req.query.pub_id && !req.query.com_id) {
     return res.status(400).json({
