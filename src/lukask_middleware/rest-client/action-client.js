@@ -95,7 +95,7 @@ var postAction = function(body, file, token, callback) {
     //////////////////////////////////////////////////////////////////////////////////////
 }
 
-/*var getPub = function (id, token, callback) {
+var getAction = function (id, token, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
  
@@ -107,7 +107,7 @@ var postAction = function(body, file, token, callback) {
         }
     }
  
-    var get = client.get(restUrl.pub + id + "/", args, function (data, response) {
+    var get = client.get(restUrl.action + id + "/", args, function (data, response) {
         console.log(data);
         callback(response.statusCode, data);
     });
@@ -119,12 +119,10 @@ var postAction = function(body, file, token, callback) {
     ////
  
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
-}*/
+}
 
 module.exports = {
     getActions: getActions,
     postAction: postAction,
-    //getPub: getPub,
-    /*patchTodo: patchTodo,
-    deleteTodo: deleteTodo*/
+    getAction: getAction,
 }

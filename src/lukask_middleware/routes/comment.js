@@ -115,7 +115,7 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
                 else if (user.fields.owner_comment == true) {
                   content = userEmitter + " ha respondido tu comentario de la publicación de " + ownerPubName;
                 }
-                else if(ownerPubName === ownerComName) {
+                else if (ownerPubName === ownerComName) {
                   content = userEmitter + " también ha respondido el comentario de " + ownerComName + " de su publicación";
                 }
                 else {
@@ -161,16 +161,16 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
   });
 });
 
-/*router.get('/:pubId', function (req, res, next) {
-  let pubId = req.params.pubId;
+router.get('/:comId', function (req, res, next) {
+  let comId = req.params.comId;
   let token = req.session.key.token;
 
-  publicationRestClient.getPub(pubId, token, function (responseCode, data) {
+  actionRestClient.getAction(comId, token, function (responseCode, data) {
     if (responseCode == 200) {
       return res.status(responseCode).json({
         code: responseCode,
-        title: "Successfully retrieving pub detail",
-        pub: data
+        title: "Successfully retrieving comment detail",
+        data: data
       });
     }
     return res.status(responseCode).json({
@@ -179,7 +179,7 @@ router.post('/', upload.single('media_file'), function (req, res, next) {
       error: data
     });
   });
-});*/
+});
 
 /*router.post('/:todoId', upload.single('todo_image'), function (req, res, next) {
   let todoId = req.params.todoId;
