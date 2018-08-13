@@ -86,7 +86,7 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
   let token = req.session.key.token;
   let dest, mediaArray = [];
 
-  if (req.files) {
+  if (req.files && req.files.length > 0) {
     //REF: https://stackoverflow.com/questions/10183291/how-to-get-the-full-url-in-express
     //serverUrl = req.protocol + '://' + req.get('host');
 
@@ -99,8 +99,6 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
         mediaPath: "/" + dest,
         mediaName: dest.substring(dest.indexOf("/", dest.indexOf("pubs/")))
       };
-
-      console.log("path", mediaArray);
     }
   }
   else {

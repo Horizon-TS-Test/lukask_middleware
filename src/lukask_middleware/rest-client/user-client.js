@@ -133,7 +133,7 @@ var postUser = function (body, mediaProfile,  callback) {
                 console.log('Error while making todo post request: ', err);
                 callback(httpResponse.statusCode, err);
             }
-            if (httpResponse.statusCode == 200) {
+            if (httpResponse.statusCode == 201) {
                 console.log('User has been updted successfully, Server responded with: ', JSON.parse(data));
                 callback(httpResponse.statusCode, JSON.parse(data));
             }
@@ -159,6 +159,7 @@ var postUser = function (body, mediaProfile,  callback) {
 
     form.append('is_active', "true");
     /**/
+    console.log("mediaProfile", mediaProfile);
 
     if (mediaProfile) {
         form.append("profile_path", mediaProfile);
