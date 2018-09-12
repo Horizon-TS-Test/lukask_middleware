@@ -65,8 +65,9 @@ router.get('/', function (req, res, next) {
   let token = req.session.key.token;
   let limit = isNaN(parseInt(req.query.limit)) ? null : req.query.limit;
   let offset = (req.query.offset) ? req.query.offset : null;
+  let userId = (req.query.user_id) ? req.query.user_id : null;
 
-  publicationRestClient.getPubByPage(token, limit, offset, function (responseCode, data) {
+  publicationRestClient.getPubByPage(token, limit, offset, userId, function (responseCode, data) {
     if (responseCode == 200) {
       return res.status(responseCode).json({
         code: responseCode,

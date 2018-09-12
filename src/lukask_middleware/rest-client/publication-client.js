@@ -60,12 +60,13 @@ var getPubFilter = function (token, cityFilter, callback) {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
-var getPubByPage = function (token, limit, offset, callback) {
+var getPubByPage = function (token, limit, offset, userId, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
     limit = ((limit) ? "?limit=" + limit : "");
     offset = ((offset) ? "&offset=" + offset : "");
-    var filter = limit + offset;
+    userId = ((userId) ? "&pubUserQr=" + userId : "");
+    var filter = limit + offset + userId;
 
     var get;
 
