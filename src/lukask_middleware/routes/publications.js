@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 var publicationRestClient = require('./../rest-client/publication-client');
+var NodeGeocoder = require('node-geocoder');
+
 
 /////////////////////// FILE UPLOAD ////////////////////////
 const pubMediaDest = 'public/images/pubs';
@@ -109,39 +111,132 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
     };
   }
 
-  publicationRestClient.postPub(req.body, mediaArray, token, function (responseCode, data) {
-    if (responseCode == 201) {
-      /*let title = 'Nueva publicación registrada';
-      let content = (req.body.detail.length > 100) ? req.body.detail.substring(0, 100) : req.body.detail;
-      let defaultUrl = '/';
-      let queryParam = data.id_publication;
-      let actions = [
-        {
-          action: '/?pubId=' + queryParam,
-          title: 'Ver Pubswall'
-        },
-        {
-          action: '/mapview?pubId=' + queryParam,
-          title: 'Ver Mapa'
-        },
-      ]
-      wepushClient.notify(title, content, defaultUrl, actions, function (resCode, notifData) {
-        console.log(resCode, notifData);
-      });*/
+  var latitud = req.body.latitude;
+  var longitud = req.body.longitude;
 
-      return res.status(responseCode).json({
-        code: responseCode,
-        title: "Publication has been created successfully",
-        data: data
-      });
-    }
-    return res.status(responseCode).json({
-      code: responseCode,
-      title: "An error has occurred",
-      error: data
+  var options = {
+    provider: 'google',
+    httpAdapter: 'https',
+    apiKey: 'AIzaSyDIjRFZ0hnXtYFoK1uvIHnvQIKoQwkzgUU',
+    formatter: null
+  };
+
+  var geocoder = NodeGeocoder(options);
+  var Local = {
+    lat: latitud,
+    lon: longitud
+  };
+  var location = "";
+  let miPrimeraPromise = new Promise((resolve, reject) => {
+    geocoder.reverse(Local, (err, res) => {
+      if (err) {
+        console.log("Error" + err);
+      }
+      location = res[0].city;
+      resolve("exito");
     });
   });
+
+  miPrimeraPromise.then((successMessage) => {
+    publicationRestClient.getPubFilter(token, location, function (responseCode, data) {
+      if (responseCode == 200) {
+        var lista = data.results;
+        var respuesta = determinePosition(location, lista, latitud, longitud, token);
+        //Verdadero si se puede crear, Falso no se puede crear el registro
+        if (respuesta) {
+          //inicio
+          publicationRestClient.postPub(req.body, mediaArray, token, function (responseCode, data) {
+            if (responseCode == 201) {
+              /*let title = 'Nueva publicación registrada';
+              let content = (req.body.detail.length > 100) ? req.body.detail.substring(0, 100) : req.body.detail;
+              let defaultUrl = '/';
+              let queryParam = data.id_publication;
+              let actions = [
+                {
+                  action: '/?pubId=' + queryParam,
+                  title: 'Ver Pubswall'
+                },
+                {
+                  action: '/mapview?pubId=' + queryParam,
+                  title: 'Ver Mapa'
+                },
+              ]
+              wepushClient.notify(title, content, defaultUrl, actions, function (resCode, notifData) {
+                console.log(resCode, notifData);
+              });*/
+
+              return res.status(responseCode).json({
+                code: responseCode,
+                title: "Publication has been created successfully",
+                data: data
+              });
+            }
+            return res.status(responseCode).json({
+              code: responseCode,
+              title: "An error has occurred",
+              error: data
+            });
+          });
+
+          //fin
+        } else {
+          console.log("No se puede false" + respuesta);
+          return res.status(responseCode).json({
+            code: 400,
+            showFront: true,
+            title: "An error has occurred",
+            error: "Posicion no permitida"
+          });
+        }
+      }
+    });
+  });//Fin de la promesa
 });
+
+
+/**
+ * Funcion que determina si la distancia es o no menor a un criterio en este caso menor a 10mtr
+ * @param {Ciudad } location 
+ * @param {Lista de publicaciones } lista 
+ * @param {Latitud de la posicion que va a ser registrada } latitud 
+ * @param {Longitud de la posicion que va a ser registrada} longitud 
+ * @param {Clave de sesion } token 
+ */
+function determinePosition(location, lista, latitud, longitud, token) {
+  for (let dato in lista) {
+    var distancia = getDistanceToCoords(latitud, longitud, lista[dato].latitude, lista[dato].length);
+    if (distancia < 5) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+/**
+ * Funcion que calcula la distancia de dos puntos dado su latitud y longitud
+ * @param {Latitud posicion uno} lat1 
+ * @param {Longitud posicion uno} lon1 
+ * @param {Latitud posicion dos} lat2 
+ * @param {Longitud posicion dos} lon2 
+ */
+function getDistanceToCoords(lat1, lon1, lat2, lon2) {
+  function _deg2rad(deg) {
+    return deg * (Math.PI / 180)
+  }
+  var R = 6371; // Radius of the earth in km 3963.191 in milles
+  var dLat = _deg2rad(lat2 - lat1);  // deg2rad below
+  var dLon = _deg2rad(lon2 - lon1);
+  var a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(_deg2rad(lat1)) * Math.cos(_deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  var d = R * c; // Distance in km
+  d = d * 1000;
+  console.log(d, "mt");
+  return d.toFixed(3);
+}
 
 router.get('/:pubId', function (req, res, next) {
   let pubId = req.params.pubId;
