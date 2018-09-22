@@ -423,17 +423,17 @@ client.on('connect', function (connection) {
   });
 
   //SUBSCRIPTION:
-  var msg = {
+  /*var msg = {
     stream: "publication",
     payload: {
       action: "subscribe",
       data: {
-        action: "create",
+        action: "create"
       }
     }
   };
 
-  connection.send(JSON.stringify(msg));
+  connection.send(JSON.stringify(msg));*/
 
   var msg = {
     stream: "publication",
@@ -456,7 +456,6 @@ client.on('connect', function (connection) {
       }
     }
   }
-
   connection.send(JSON.stringify(msg));
 
   var msg = {
@@ -538,6 +537,6 @@ client.connect('ws://' + servers.backend_websocket + '/lukask-api', "", "http://
  * //SOCKET WITH EXPRESS GENERATOR:
  */
 //REF: https://medium.com/@suhas_chitade/express-generator-with-socket-io-80464341e8ba
-module.exports = { app: app, server: server };
+module.exports = { app: app, server: server};
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
