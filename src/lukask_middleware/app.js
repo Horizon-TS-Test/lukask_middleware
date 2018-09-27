@@ -458,7 +458,7 @@ client.on('connect', function (connection) {
   }
   connection.send(JSON.stringify(msg));
 
-  var msg = {
+ /* var msg = {
     stream: "multimedia",
     payload: {
       action: "subscribe",
@@ -468,7 +468,7 @@ client.on('connect', function (connection) {
     }
   };
 
-  connection.send(JSON.stringify(msg));
+  connection.send(JSON.stringify(msg));*/
 
   var msg = {
     stream: "actions",
