@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var publicationRestClient = require('./../rest-client/publication-client');
+var servers = require("../config/servers");
 
 /////////////////////// FILE UPLOAD ////////////////////////
 const pubMediaDest = 'public/images/pubs';
@@ -40,6 +41,14 @@ var wepushClient = require('./../rest-client/webpush-client');
     });
   });
 });*/
+
+/**********************************************
+ * Inicalización de webSocket temporal
+ **********************************************/
+//////////////////////////////////////////////////////////////////////////////////
+var WebSocket = require('ws');
+var ws = new WebSocket('ws://' + servers.backend_websocket + '/lukask-api');
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 router.get('/filter/:city', function (req, res, next) {
   let cityFilter = req.params.city;
@@ -83,7 +92,7 @@ router.get('/', function (req, res, next) {
   });
 });
 
-router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
+router.post('/', upload.array('media_files[]', 5), (req, res, next) => {
   let token = req.session.key.token;
   let dest, mediaArray = [];
 
@@ -110,7 +119,7 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
     };
   }
 
-  publicationRestClient.postPub(req.body, mediaArray, token, function (responseCode, data) {
+  publicationRestClient.postPub(req.body, mediaArray, token, (responseCode, data) => {
     if (responseCode == 201) {
       /*let title = 'Nueva publicación registrada';
       let content = (req.body.detail.length > 100) ? req.body.detail.substring(0, 100) : req.body.detail;
@@ -129,6 +138,30 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
       wepushClient.notify(title, content, defaultUrl, actions, function (resCode, notifData) {
         console.log(resCode, notifData);
       });*/
+
+      var msg = {
+        stream: "publication",
+        payload: {
+          action: "custom_create",
+          pk: data.id_publication,
+          data: {
+          }
+        }
+      }
+      ws.send(JSON.stringify(msg));
+
+      ws.onmessage = function (message) {
+        // SOCKET.IO CLIENTS LOGGED CONTROL:
+        //REF: https://stackoverflow.com/questions/35249770/how-to-get-all-the-sockets-connected-to-socket-io
+        Object.keys(req.io.sockets.sockets).forEach(function (id) {
+          console.log("FROM PUB: Sending data to socket with ID: ", id)  // socketId
+          if (req.io.sockets.connected[id].request.session.key) {
+            //REF: https://stackoverflow.com/questions/8281382/socket-send-outside-of-io-sockets-on
+            req.io.sockets.connected[id].emit("backend-rules", JSON.parse(message.data));
+          }
+        })
+        ////
+      }
 
       return res.status(responseCode).json({
         code: responseCode,
