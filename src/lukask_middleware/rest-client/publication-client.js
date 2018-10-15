@@ -132,7 +132,7 @@ var postPub = function (body, mediaArray, token, callback) {
         for (var i = 0; i < mediaArray.length; i++) {
             form.append('medios_data[' + i + ']format_multimedia', mediaArray[i].mediaType);
             form.append('medios_data[' + i + ']name_file', mediaArray[i].mediaName);
-            form.append('medios_data[' + i + ']description_file', body.detail);
+            form.append('medios_data[' + i + ']description_file', '');
             form.append('medios_data[' + i + ']media_path', mediaArray[i].mediaPath);
         }
     }
