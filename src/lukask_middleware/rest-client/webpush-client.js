@@ -1,5 +1,6 @@
 var webpush = require('./../config/push-api');
 var Client = require("node-rest-client").Client;
+var Config = require("../config/credentials")
 
 var notify = function (receivers, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
@@ -12,6 +13,7 @@ var notify = function (receivers, callback) {
         },
         headers: {
             "Content-Type": "application/json",
+            "Authorization": "Token " + Config.push_cli_token
         }
     }
 
@@ -34,6 +36,7 @@ var subscribe = function (body, callback) {
         data: body,
         headers: {
             "Content-Type": "application/json",
+            "Authorization": "Token " + Config.push_cli_token
         }
     }
 
@@ -59,6 +62,7 @@ var unsubscribe = function (body, callback) {
         data: body,
         headers: {
             "Content-Type": "application/json",
+            "Authorization": "Token " + Config.push_cli_token
         }
     }
 
