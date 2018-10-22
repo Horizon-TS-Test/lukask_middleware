@@ -1,8 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var publicationRestClient = require('./../rest-client/publication-client');
-var NodeGeocoder = require('node-geocoder');
-
+var servers = require("../config/servers");
 
 /////////////////////// FILE UPLOAD ////////////////////////
 const pubMediaDest = 'public/images/pubs';
@@ -43,6 +42,14 @@ var wepushClient = require('./../rest-client/webpush-client');
   });
 });*/
 
+/**********************************************
+ * Inicalización de webSocket temporal
+ **********************************************/
+//////////////////////////////////////////////////////////////////////////////////
+var WebSocket = require('ws');
+var ws = new WebSocket('ws://' + servers.backend_websocket + '/lukask-api');
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
 router.get('/filter/:city', function (req, res, next) {
   let cityFilter = req.params.city;
   let token = req.session.key.token;
@@ -67,8 +74,9 @@ router.get('/', function (req, res, next) {
   let token = req.session.key.token;
   let limit = isNaN(parseInt(req.query.limit)) ? null : req.query.limit;
   let offset = (req.query.offset) ? req.query.offset : null;
+  let userId = (req.query.user_id) ? req.query.user_id : null;
 
-  publicationRestClient.getPubByPage(token, limit, offset, function (responseCode, data) {
+  publicationRestClient.getPubByPage(token, limit, offset, userId, function (responseCode, data) {
     if (responseCode == 200) {
       return res.status(responseCode).json({
         code: responseCode,
@@ -84,7 +92,7 @@ router.get('/', function (req, res, next) {
   });
 });
 
-router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
+router.post('/', upload.array('media_files[]', 5), (req, res, next) => {
   let token = req.session.key.token;
   let dest, mediaArray = [];
 
@@ -111,7 +119,7 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
     };
   }
 
-  var latitud = req.body.latitude;
+   var latitud = req.body.latitude;
   var longitud = req.body.longitude;
 
   var options = {
@@ -127,7 +135,7 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
     lon: longitud
   };
   var location = "";
-  let miPrimeraPromise = new Promise((resolve, reject) => {
+  let obteniendoCiudad = new Promise((resolve, reject) => {
     geocoder.reverse(Local, (err, res) => {
       if (err) {
         console.log("Error" + err);
@@ -137,15 +145,14 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
     });
   });
 
-  miPrimeraPromise.then((successMessage) => {
+  obteniendoCiudad.then((successMessage) => {
     publicationRestClient.getPubFilter(token, location, function (responseCode, data) {
       if (responseCode == 200) {
         var lista = data.results;
         var respuesta = determinePosition(location, lista, latitud, longitud, token);
         //Verdadero si se puede crear, Falso no se puede crear el registro
         if (respuesta) {
-          //inicio
-          publicationRestClient.postPub(req.body, mediaArray, token, function (responseCode, data) {
+          publicationRestClient.postPub(req.body, mediaArray, token, (responseCode, data) => {
             if (responseCode == 201) {
               /*let title = 'Nueva publicación registrada';
               let content = (req.body.detail.length > 100) ? req.body.detail.substring(0, 100) : req.body.detail;
@@ -165,6 +172,30 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
                 console.log(resCode, notifData);
               });*/
 
+              var msg = {
+                stream: "publication",
+                payload: {
+                  action: "custom_create",
+                  pk: data.id_publication,
+                  data: {
+                  }
+                }
+              }
+              ws.send(JSON.stringify(msg));
+
+              ws.onmessage = function (message) {
+                // SOCKET.IO CLIENTS LOGGED CONTROL:
+                //REF: https://stackoverflow.com/questions/35249770/how-to-get-all-the-sockets-connected-to-socket-io
+                Object.keys(req.io.sockets.sockets).forEach(function (id) {
+                  console.log("FROM PUB: Sending data to socket with ID: ", id)  // socketId
+                  if (req.io.sockets.connected[id].request.session.key) {
+                    //REF: https://stackoverflow.com/questions/8281382/socket-send-outside-of-io-sockets-on
+                    req.io.sockets.connected[id].emit("backend-rules", JSON.parse(message.data));
+                  }
+                })
+                ////
+              }
+
               return res.status(responseCode).json({
                 code: responseCode,
                 title: "Publication has been created successfully",
@@ -177,9 +208,7 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
               error: data
             });
           });
-
-          //fin
-        } else {
+          } else {
           console.log("No se puede false" + respuesta);
           return res.status(responseCode).json({
             code: 400,
@@ -190,7 +219,7 @@ router.post('/', upload.array('media_files[]', 5), function (req, res, next) {
         }
       }
     });
-  });//Fin de la promesa
+  });
 });
 
 
@@ -237,6 +266,7 @@ function getDistanceToCoords(lat1, lon1, lat2, lon2) {
   console.log(d, "mt");
   return d.toFixed(3);
 }
+
 
 router.get('/:pubId', function (req, res, next) {
   let pubId = req.params.pubId;

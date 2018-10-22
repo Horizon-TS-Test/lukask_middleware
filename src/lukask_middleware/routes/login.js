@@ -8,8 +8,6 @@ router.post('/', function (req, res, next) {
   let user = cryptoGen.decryptPass(req.body.username);
   let password = cryptoGen.decryptPass(req.body.password);
 
-  console.log(req.body);
-
   loginClient.responseLogin(user, password, function (responseCode, data) {
     if (responseCode == 200) {
       //GENERATING CRYPTO ID FOR USER SESSION:
@@ -23,6 +21,7 @@ router.post('/', function (req, res, next) {
         token: data.token
       };
       ////////////////////////////////////////
+      
       return res.status(responseCode).json({
         code: responseCode,
         title: "Successfully calling of login REST API method",
@@ -37,6 +36,17 @@ router.post('/', function (req, res, next) {
       title: "An error has occurred",
       error: data
     });
+  });
+});
+
+router.post('/logout', function (req, res, next) {
+  if(req.session) {
+    req.session.destroy();
+  }
+  return res.status(200).json({
+    code: 200,
+    title: "You've logout from the app",
+    data: true
   });
 });
 

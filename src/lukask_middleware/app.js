@@ -46,6 +46,7 @@ var paymentsRoute = require('./routes/payments');
 var provinciaRoute = require('./routes/province');
 var cantonRoute = require('./routes/canton');
 var parroquiaRoute = require('./routes/parroquia');
+var pushRoute = require('./routes/push');
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -113,9 +114,11 @@ app.use(express.static(path.join(__dirname, 'node_modules')));
 app.use(function (req, res, next) {
   res.setHeader('Access-Control-Allow-Origin', servers.allow_origin);
   //res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, Content-Length, X-Requested-With, Content-Type, Accept, X-Access-Token, Pass-Key');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, DELETE, OPTIONS, PATCH');
+  //res.setHeader('Access-Control-Allow-Headers', 'Origin, Content-Length, X-Requested-With, Content-Type, Accept, X-Access-Token, Pass-Key');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, Content-Length, X-Requested-With, Content-Type, Accept, X-Access-Token, Pass-Key, Overwrite, Destination, Depth, User-Agent, Translate, Range, Content-Range, Timeout, X-File-Size, If-Modified-Since, X-File-Name, Cache-Control, Location, Lock-Token, If');
+  res.setHeader('Access-Control-Allow-Methods', 'ACL, CANCELUPLOAD, CHECKIN, CHECKOUT, COPY, DELETE, GET, HEAD, LOCK, MKCALENDAR, MKCOL, MOVE, OPTIONS, POST, PROPFIND, PROPPATCH, PUT, REPORT, SEARCH, UNCHECKOUT, UNLOCK, UPDATE, VERSION-CONTROL, PATCH');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Expose-Headers', 'DAV, content-length, Allow');
 
   //PREFLIGHT REQUEST HACKED:
   //REF: https://vinaygopinath.me/blog/tech/enable-cors-with-pre-flight/
@@ -297,6 +300,7 @@ app.use(function (req, res, next) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+app.use('/push', pushRoute);
 app.use('/payment', paymentsRoute);
 app.use('/parroquia', parroquiaRoute);
 app.use('/canton', cantonRoute);
@@ -423,17 +427,17 @@ client.on('connect', function (connection) {
   });
 
   //SUBSCRIPTION:
-  var msg = {
+  /*var msg = {
     stream: "publication",
     payload: {
       action: "subscribe",
       data: {
-        action: "create",
+        action: "create"
       }
     }
   };
 
-  connection.send(JSON.stringify(msg));
+  connection.send(JSON.stringify(msg));*/
 
   var msg = {
     stream: "publication",
@@ -456,10 +460,9 @@ client.on('connect', function (connection) {
       }
     }
   }
-
   connection.send(JSON.stringify(msg));
 
-  var msg = {
+ /* var msg = {
     stream: "multimedia",
     payload: {
       action: "subscribe",
@@ -469,7 +472,7 @@ client.on('connect', function (connection) {
     }
   };
 
-  connection.send(JSON.stringify(msg));
+  connection.send(JSON.stringify(msg));*/
 
   var msg = {
     stream: "actions",
@@ -538,6 +541,6 @@ client.connect('ws://' + servers.backend_websocket + '/lukask-api', "", "http://
  * //SOCKET WITH EXPRESS GENERATOR:
  */
 //REF: https://medium.com/@suhas_chitade/express-generator-with-socket-io-80464341e8ba
-module.exports = { app: app, server: server };
+module.exports = { app: app, server: server};
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -60,12 +60,13 @@ var getPubFilter = function (token, cityFilter, callback) {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
-var getPubByPage = function (token, limit, offset, callback) {
+var getPubByPage = function (token, limit, offset, userId, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
     limit = ((limit) ? "?limit=" + limit : "");
     offset = ((offset) ? "&offset=" + offset : "");
-    var filter = limit + offset;
+    userId = ((userId) ? "&pubUserQr=" + userId : "");
+    var filter = limit + offset + userId;
 
     var get;
 
@@ -131,7 +132,7 @@ var postPub = function (body, mediaArray, token, callback) {
         for (var i = 0; i < mediaArray.length; i++) {
             form.append('medios_data[' + i + ']format_multimedia', mediaArray[i].mediaType);
             form.append('medios_data[' + i + ']name_file', mediaArray[i].mediaName);
-            form.append('medios_data[' + i + ']description_file', body.detail);
+            form.append('medios_data[' + i + ']description_file', '');
             form.append('medios_data[' + i + ']media_path', mediaArray[i].mediaPath);
         }
     }

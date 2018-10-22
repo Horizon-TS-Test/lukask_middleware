@@ -1,3 +1,7 @@
+var pushServer = 'http://192.168.1.5:3200';
+
 module.exports = {
-    webpush_url: 'http://192.168.1.6:3200/notification'
+    notification: pushServer + '/notification',
+    subscribe: pushServer + '/pubsub/subscribe',
+    unsubscribe: pushServer + '/pubsub/unsubscribe'
 }
