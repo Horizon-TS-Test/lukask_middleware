@@ -16,4 +16,5 @@ module.exports = {
     province: servers.backend + '/lukask-api/province/',
     canton: servers.backend + '/lukask-api/canton/',
     parroquia: servers.backend + '/lukask-api/parish/',
+    media: servers.backend + '/lukask-api/gestion_media'
 }
