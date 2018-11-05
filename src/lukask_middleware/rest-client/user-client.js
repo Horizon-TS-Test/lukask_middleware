@@ -38,11 +38,11 @@ var getUserProfile = function (userId, token, callback) {
 var getUserSupporters = function (relevanceType, comRelevance, limit, offset, token, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
-    var typeRelFilter = (comRelevance) ? "?usrRelCom=" + relevanceType : "?usrRelPub=" + relevanceType;
-    var limitFilter = (limit) ? "&limit=" + limit : "";
-    var offsetFilter = (offset) ? "&offset=" + offset : "";
+    var limitFilter = (limit) ? "?limit=" + limit : "";
+    var offsetFilter = (limit && offset) ? "&offset=" + offset : "";
+    var typeRelFilter = (comRelevance) ? "&usrRelCom=" + relevanceType : "&usrRelPub=" + relevanceType;
 
-    var queryFilter = typeRelFilter + limitFilter + offsetFilter;
+    var queryFilter = limitFilter + offsetFilter + typeRelFilter;
     var nextPattern;
 
     //GET METHOD:
@@ -53,7 +53,7 @@ var getUserSupporters = function (relevanceType, comRelevance, limit, offset, to
         }
     }
 
-    var get = client.get(restUrl.user + queryFilter + "/", args, function (data, response) {
+    var get = client.get(restUrl.user + queryFilter, args, function (data, response) {
         if (data.next) {
             nextPattern = "&" + data.next.substring(data.next.indexOf("limit="), data.next.indexOf("&", data.next.indexOf("limit=")));
             nextPattern += "&" + data.next.substring(data.next.indexOf("offset="));
@@ -119,8 +119,8 @@ var patchUser = function (userId, body, mediaProfile, token, callback) {
     //////////////////////////////////////////////////////////////////////////////////////
 }
 
-/*Para un nuevo registro*/ 
-var postUser = function (body, mediaProfile,  callback) {
+/*Para un nuevo registro*/
+var postUser = function (body, mediaProfile, callback) {
     ////////////////////////////////// POST REQUEST //////////////////////////////////////
     var r = request.post(
         {
