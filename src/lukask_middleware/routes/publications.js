@@ -4,6 +4,7 @@ var publicationRestClient = require('./../rest-client/publication-client');
 var servers = require("../config/servers");
 var pv = require("../tools/position-validator");
 var NodeGeocoder = require('node-geocoder');
+var googleOptions = require("../config/google-maps-data");
 
 /////////////////////// FILE UPLOAD ////////////////////////
 const pubMediaDest = 'public/images/pubs';
@@ -124,15 +125,10 @@ router.post('/', upload.array('media_files[]', 5), (req, res, next) => {
   var latitud = req.body.latitude;
   var longitud = req.body.longitude;
 
-  var options = {
-    provider: 'google',
-    httpAdapter: 'https',
-    apiKey: 'AIzaSyDIjRFZ0hnXtYFoK1uvIHnvQIKoQwkzgUU',
-    formatter: null
-  };
+  var options = googleOptions.options;
 
   var geocoder = NodeGeocoder(options);
-  var Local = {lat: latitud,lon: longitud};
+  var Local = { lat: latitud, lon: longitud };
   var location = "";
   let obteniendoCiudad = new Promise((resolve, reject) => {
     geocoder.reverse(Local, (err, res) => {
@@ -147,8 +143,10 @@ router.post('/', upload.array('media_files[]', 5), (req, res, next) => {
   obteniendoCiudad.then((successMessage) => {
     publicationRestClient.getPubFilter(token, location, function (responseCode, data) {
       if (responseCode == 200) {
+        //Lista de pubicaciones registradas
         var lista = data.results;
-        var respuesta = pv.determinePosition(location, lista, latitud, longitud, token);
+        //Funcion que determina si esta apto para que la publicacion se pueda insertar o no 
+        var respuesta = pv.determinePosition(location, lista, latitud, longitud, token, req.body.type_publication);
         //Verdadero si se puede crear, Falso no se puede crear el registro
         if (respuesta) {
           publicationRestClient.postPub(req.body, mediaArray, token, (responseCode, data) => {
@@ -207,7 +205,7 @@ router.post('/', upload.array('media_files[]', 5), (req, res, next) => {
               error: data
             });
           });
-          } else {
+        } else {
           console.log("No se puede false" + respuesta);
           return res.status(responseCode).json({
             code: 400,

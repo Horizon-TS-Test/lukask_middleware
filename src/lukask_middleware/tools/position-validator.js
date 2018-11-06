@@ -7,11 +7,12 @@
  * @param {Latitud de la posicion que va a ser registrada } latitud 
  * @param {Longitud de la posicion que va a ser registrada} longitud 
  * @param {Clave de sesion } token 
+ * @param {Tipo de la publicacion  } tipoP 
  */
-function determinePosition(location, lista, latitud, longitud, token) {
+function determinePosition(location, lista, latitud, longitud, token,tipoP) {
   for (let dato in lista) {
     var distancia = getDistanceToCoords(latitud, longitud, lista[dato].latitude, lista[dato].length);
-    if (distancia < 5) {
+    if (distancia < 10 && tipoP == lista[dato].type_publication){
       return false;
     }
   }
