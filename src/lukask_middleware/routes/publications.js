@@ -3,8 +3,7 @@ var router = express.Router();
 var publicationRestClient = require('./../rest-client/publication-client');
 var servers = require("../config/servers");
 var pv = require("../tools/position-validator");
-var NodeGeocoder = require('node-geocoder');
-var googleOptions = require("../config/google-maps-data");
+var geoClient = require("../geocoder-client/geo-client");
 
 /////////////////////// FILE UPLOAD ////////////////////////
 const pubMediaDest = 'public/images/pubs';
@@ -22,8 +21,6 @@ var storage = multer.diskStorage(
 );
 var upload = multer({ storage: storage });
 ////////////////////////////////////////////////////////////
-
-var wepushClient = require('./../rest-client/webpush-client');
 
 /*router.get('/', function (req, res, next) {
   let userId = 1;
@@ -96,8 +93,8 @@ router.get('/', function (req, res, next) {
 });
 
 router.post('/', upload.array('media_files[]', 5), (req, res, next) => {
-  let token = req.session.key.token;
-  let dest, mediaArray = [];
+  var token = req.session.key.token;
+  var dest, mediaArray = [];
 
   if (req.files && req.files.length > 0) {
     //REF: https://stackoverflow.com/questions/10183291/how-to-get-the-full-url-in-express
@@ -122,52 +119,12 @@ router.post('/', upload.array('media_files[]', 5), (req, res, next) => {
     };
   }
 
-  var latitud = req.body.latitude;
-  var longitud = req.body.longitude;
-
-  var options = googleOptions.options;
-
-  var geocoder = NodeGeocoder(options);
-  var Local = { lat: latitud, lon: longitud };
-  var location = "";
-  let obteniendoCiudad = new Promise((resolve, reject) => {
-    geocoder.reverse(Local, (err, res) => {
-      if (err) {
-        console.log("Error" + err);
-      }
-      location = res[0].city;
-      resolve("exito");
-    });
-  });
-
-  obteniendoCiudad.then((successMessage) => {
-    publicationRestClient.getPubFilter(token, location, function (responseCode, data) {
-      if (responseCode == 200) {
-        //Lista de pubicaciones registradas
-        var lista = data.results;
-        //Funcion que determina si esta apto para que la publicacion se pueda insertar o no 
-        var respuesta = pv.determinePosition(location, lista, latitud, longitud, token, req.body.type_publication);
-        //Verdadero si se puede crear, Falso no se puede crear el registro
-        if (respuesta) {
+  geoClient.getCity(req.body.latitude, req.body.longitude, (cityPromise) => {
+    cityPromise.then((city) => {
+      validatePub(city, req.body.latitude, req.body.longitude, req.body.type_publication, token, (isValid) => {
+        if (isValid) {
           publicationRestClient.postPub(req.body, mediaArray, token, (responseCode, data) => {
             if (responseCode == 201) {
-              /*let title = 'Nueva publicación registrada';
-              let content = (req.body.detail.length > 100) ? req.body.detail.substring(0, 100) : req.body.detail;
-              let defaultUrl = '/';
-              let queryParam = data.id_publication;
-              let actions = [
-                {
-                  action: '/?pubId=' + queryParam,
-                  title: 'Ver Pubswall'
-                },
-                {
-                  action: '/mapview?pubId=' + queryParam,
-                  title: 'Ver Mapa'
-                },
-              ]
-              wepushClient.notify(title, content, defaultUrl, actions, function (resCode, notifData) {
-                console.log(resCode, notifData);
-              });*/
 
               var msg = {
                 stream: "publication",
@@ -206,19 +163,40 @@ router.post('/', upload.array('media_files[]', 5), (req, res, next) => {
             });
           });
         } else {
-          console.log("No se puede false" + respuesta);
-          return res.status(responseCode).json({
+          console.log("No se puede false" + isValid);
+          return res.status(400).json({
             code: 400,
             showFront: true,
             title: "An error has occurred",
-            error: "Posicion no permitida"
+            error: "Posición no permitida"
           });
         }
-      }
+      });
     });
   });
 });
 
+
+/*********************************************
+ * MÉTODO PARA VALIDAR QUE LA PUBLICACIÓN NO SE REPITA EN UN RANGO 10 METROS
+ ********************************************/
+function validatePub(location, latitude, longitude, pubType, token, callback) {
+  publicationRestClient.getPubFilter(token, location, function (responseCode, data) {
+    if (responseCode == 200) {
+      //Lista de pubicaciones registradas
+      var pubFilterList = data.results;
+      //Funcion que determina si esta apto para que la publicacion se pueda insertar o no 
+      var respuesta = pv.determinePosition(pubFilterList, latitude, longitude, pubType);
+      //Verdadero si se puede crear, Falso no se puede crear el registro
+      callback(respuesta);
+    }
+    else {
+      callback(true);
+    }
+  });
+}
+/*********************************************
+ ********************************************/
 
 
 router.get('/:pubId', function (req, res, next) {
@@ -264,7 +242,7 @@ router.post('/transmission/:pubId', function (req, res, next) {
 /*router.get('/delete/:todoId', function (req, res, next) {
   let todoId = req.params.todoId;
   let token = req.session.key.token;
-
+ 
   publicationRestClient.deleteTodo(todoId, token, function (responseCode, data) {
     if (responseCode == 200) {
       return res.status(responseCode).json({

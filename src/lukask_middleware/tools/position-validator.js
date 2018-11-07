@@ -1,18 +1,16 @@
 'use strict';
 
 /**
- * Funcion que determina si la distancia es o no menor a un criterio en este caso menor a 10mtr
- * @param {Ciudad } location 
+ * Función que determina si la distancia es o no menor a un criterio en este caso menor a 10mtr
  * @param {Lista de publicaciones } lista 
  * @param {Latitud de la posicion que va a ser registrada } latitud 
  * @param {Longitud de la posicion que va a ser registrada} longitud 
- * @param {Clave de sesion } token 
  * @param {Tipo de la publicacion  } tipoP 
  */
-function determinePosition(location, lista, latitud, longitud, token,tipoP) {
+function determinePosition(lista, latitud, longitud, tipoP) {
   for (let dato in lista) {
     var distancia = getDistanceToCoords(latitud, longitud, lista[dato].latitude, lista[dato].length);
-    if (distancia < 10 && tipoP == lista[dato].type_publication){
+    if (distancia < 10 && tipoP == lista[dato].type_publication) {
       return false;
     }
   }
@@ -45,4 +43,4 @@ function getDistanceToCoords(lat1, lon1, lat2, lon2) {
   return d.toFixed(3);
 }
 
-module.exports = { determinePosition};
+module.exports = { determinePosition };
