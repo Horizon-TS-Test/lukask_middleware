@@ -12,7 +12,7 @@ var ftpClient = require("ftp");
 
 
 /**********************************************
- * Inicalización de webSocket temporal
+ * WEBSOCKET CLIENT PARA ENVIAR UNA ACTUALIZACION DE LOS MEDIOS DE UNA PUBLICACION
  **********************************************/
 //////////////////////////////////////////////////////////////////////////////////
 var WebSocket = require('ws');
