@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var publicationRestClient = require('./../rest-client/publication-client');
 var servers = require("../config/servers");
+var pv = require("../tools/position-validator");
+var geoClient = require("../geocoder-client/geo-client");
 
 /////////////////////// FILE UPLOAD ////////////////////////
 const pubMediaDest = 'public/images/pubs';
@@ -19,8 +21,6 @@ var storage = multer.diskStorage(
 );
 var upload = multer({ storage: storage });
 ////////////////////////////////////////////////////////////
-
-var wepushClient = require('./../rest-client/webpush-client');
 
 /*router.get('/', function (req, res, next) {
   let userId = 1;
@@ -93,8 +93,8 @@ router.get('/', function (req, res, next) {
 });
 
 router.post('/', upload.array('media_files[]', 5), (req, res, next) => {
-  let token = req.session.key.token;
-  let dest, mediaArray = [];
+  var token = req.session.key.token;
+  var dest, mediaArray = [];
 
   if (req.files && req.files.length > 0) {
     //REF: https://stackoverflow.com/questions/10183291/how-to-get-the-full-url-in-express
@@ -119,45 +119,85 @@ router.post('/', upload.array('media_files[]', 5), (req, res, next) => {
     };
   }
 
-  publicationRestClient.postPub(req.body, mediaArray, token, (responseCode, data) => {
-    if (responseCode == 201) {
-      var msg = {
-        stream: "publication",
-        payload: {
-          action: "custom_create",
-          pk: data.id_publication,
-          data: {
-          }
+  geoClient.getCity(req.body.latitude, req.body.longitude, (cityPromise) => {
+    cityPromise.then((city) => {
+      validatePub(city, req.body.latitude, req.body.longitude, req.body.type_publication, token, (isValid) => {
+        if (isValid) {
+          publicationRestClient.postPub(req.body, mediaArray, token, (responseCode, data) => {
+            if (responseCode == 201) {
+
+              var msg = {
+                stream: "publication",
+                payload: {
+                  action: "custom_create",
+                  pk: data.id_publication,
+                  data: {
+                  }
+                }
+              }
+              ws.send(JSON.stringify(msg));
+
+              ws.onmessage = function (message) {
+                // SOCKET.IO CLIENTS LOGGED CONTROL:
+                //REF: https://stackoverflow.com/questions/35249770/how-to-get-all-the-sockets-connected-to-socket-io
+                Object.keys(req.io.sockets.sockets).forEach(function (id) {
+                  console.log("FROM PUB: Sending data to socket with ID: ", id)  // socketId
+                  if (req.io.sockets.connected[id].request.session.key) {
+                    //REF: https://stackoverflow.com/questions/8281382/socket-send-outside-of-io-sockets-on
+                    req.io.sockets.connected[id].emit("backend-rules", JSON.parse(message.data));
+                  }
+                })
+                ////
+              }
+
+              return res.status(responseCode).json({
+                code: responseCode,
+                title: "Publication has been created successfully",
+                data: data
+              });
+            }
+            return res.status(responseCode).json({
+              code: responseCode,
+              title: "An error has occurred",
+              error: data
+            });
+          });
+        } else {
+          console.log("No se puede false" + isValid);
+          return res.status(400).json({
+            code: 400,
+            showFront: true,
+            title: "An error has occurred",
+            error: "Posición no permitida"
+          });
         }
-      }
-      ws.send(JSON.stringify(msg));
-
-      ws.onmessage = function (message) {
-        // SOCKET.IO LOGGED CLIENTS CONTROL:
-        //REF: https://stackoverflow.com/questions/35249770/how-to-get-all-the-sockets-connected-to-socket-io
-        Object.keys(req.io.sockets.sockets).forEach(function (id) {
-          console.log("FROM PUB: Sending data to socket with ID: ", id)  // socketId
-          if (req.io.sockets.connected[id].request.session.key) {
-            //REF: https://stackoverflow.com/questions/8281382/socket-send-outside-of-io-sockets-on
-            req.io.sockets.connected[id].emit("backend-rules", JSON.parse(message.data));
-          }
-        })
-        ////
-      }
-
-      return res.status(responseCode).json({
-        code: responseCode,
-        title: "Publication has been created successfully",
-        data: data
       });
-    }
-    return res.status(responseCode).json({
-      code: responseCode,
-      title: "An error has occurred",
-      error: data
     });
   });
 });
+
+
+/*********************************************
+ * MÉTODO PARA VALIDAR QUE LA PUBLICACIÓN NO SE REPITA EN UN RANGO 10 METROS
+ ********************************************/
+function validatePub(location, latitude, longitude, pubType, token, callback) {
+  publicationRestClient.getPubFilter(token, location, function (responseCode, data) {
+    if (responseCode == 200) {
+      //Lista de pubicaciones registradas
+      var pubFilterList = data.results;
+      //Funcion que determina si esta apto para que la publicacion se pueda insertar o no 
+      var respuesta = pv.determinePosition(pubFilterList, latitude, longitude, pubType);
+      //Verdadero si se puede crear, Falso no se puede crear el registro
+      callback(respuesta);
+    }
+    else {
+      callback(true);
+    }
+  });
+}
+/*********************************************
+ ********************************************/
+
 
 router.get('/:pubId', function (req, res, next) {
   let pubId = req.params.pubId;
@@ -202,7 +242,7 @@ router.post('/transmission/:pubId', function (req, res, next) {
 /*router.get('/delete/:todoId', function (req, res, next) {
   let todoId = req.params.todoId;
   let token = req.session.key.token;
-
+ 
   publicationRestClient.deleteTodo(todoId, token, function (responseCode, data) {
     if (responseCode == 200) {
       return res.status(responseCode).json({
