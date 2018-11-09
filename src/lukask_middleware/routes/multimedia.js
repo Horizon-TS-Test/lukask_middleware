@@ -40,8 +40,8 @@ router.post('/',function(req, res, next){
 
         upload(req, res, function(err){
             if(err){
-                return res.status(0).json({
-                    code : res.statusCode,
+                return res.status(500).json({
+                    code : 500,
                     title : 'ERROR AL GUARDAR EL VIDEO EN SERVIDOR FTP',
                     data : err
                 });
