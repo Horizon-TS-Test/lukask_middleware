@@ -122,6 +122,13 @@ router.post('/', upload.array('media_files[]', 5), (req, res, next) => {
   geoClient.getCity(req.body.latitude, req.body.longitude, (cityPromise) => {
     cityPromise.then((city) => {
       validatePub(city, req.body.latitude, req.body.longitude, req.body.type_publication, token, (isValid) => {
+        /***
+         * TEMPORAL:
+         */
+        isValid = true;
+        /**
+         * 
+         */
         if (isValid) {
           publicationRestClient.postPub(req.body, mediaArray, token, (responseCode, data) => {
             if (responseCode == 201) {
