@@ -127,6 +127,7 @@ var postPub = function (body, mediaArray, token, callback) {
     form.append('location', body.location);
     form.append('address', body.address);
     form.append('is_trans', body.is_trans);
+    form.append('eersaClaimId', body.eersaClaimId);
 
     if (mediaArray) {
         for (var i = 0; i < mediaArray.length; i++) {
