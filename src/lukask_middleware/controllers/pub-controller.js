@@ -2,6 +2,7 @@ var servers = require("../config/servers");
 var pv = require("../tools/position-validator");
 var geoClient = require("../geocoder-client/geo-client");
 var publicationRestClient = require('./../rest-client/publication-client');
+var pubTypes = require('./../const/pub-type');
 
 /*********************************************************************************
  * INICIALIZACIÓN DEL WEBSOCKET PARA ENVIAR LA ACTUALIZACIÓN DE UNA PUBLICACIÓN:
@@ -60,6 +61,7 @@ function validatePub(location, latitude, longitude, pubType, token, callback) {
 
 var postClaim = function (body, files, token, io, callback) {
     let mediaArray = defineMediaArray(files);
+    body.type_publication = pubTypes.claim;
 
     geoClient.getCity(body.latitude, body.longitude, (cityPromise) => {
         cityPromise.then((city) => {
@@ -95,9 +97,10 @@ var postClaim = function (body, files, token, io, callback) {
 
                             let title = 'Claim has been created successfully'
                             callback({ code: responseCode, title: title, data: data, isError: false, showMessage: false });
+                        } else {
+                            let title = "An error has occurred";
+                            callback({ code: responseCode, title: title, data: error, isError: true, showMessage: false });
                         }
-                        let title = "An error has occurred";
-                        callback({ code: responseCode, title: title, data: error, isError: true, showMessage: false });
                     });
                 } else {
                     let title = 'An error has occurred';
@@ -111,6 +114,7 @@ var postClaim = function (body, files, token, io, callback) {
 
 var postPub = function (body, files, token, io, callback) {
     let mediaArray = defineMediaArray(files);
+    body.type_publication = pubTypes.publication;
 
     publicationRestClient.postPub(body, mediaArray, token, (responseCode, data) => {
         if (responseCode == 201) {

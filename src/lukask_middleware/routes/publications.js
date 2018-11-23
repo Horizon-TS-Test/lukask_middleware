@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var publicationRestClient = require('./../rest-client/publication-client');
 var postClaim = require('./../controllers/pub-controller');
+var pubType = require('./../const/pub-type');
 
 /////////////////////// FILE UPLOAD ////////////////////////
 const pubMediaDest = 'public/images/pubs';
@@ -65,8 +66,15 @@ router.get('/', function (req, res, next) {
   let limit = isNaN(parseInt(req.query.limit)) ? null : req.query.limit;
   let offset = (req.query.offset) ? req.query.offset : null;
   let userId = (req.query.user_id) ? req.query.user_id : null;
+  let typeId = null;
+  if(req.query.pub) {
+    typeId = pubType.publication;
+  }
+  else if(req.query.claim) {
+    typeId = pubType.claim;
+  }
 
-  publicationRestClient.getPubByPage(token, limit, offset, userId, function (responseCode, data) {
+  publicationRestClient.getPubByPage(token, limit, offset, userId, typeId, function (responseCode, data) {
     if (responseCode == 200) {
       return res.status(responseCode).json({
         code: responseCode,

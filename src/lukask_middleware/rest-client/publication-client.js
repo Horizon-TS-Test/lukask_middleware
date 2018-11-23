@@ -60,13 +60,14 @@ var getPubFilter = function (token, cityFilter, callback) {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
-var getPubByPage = function (token, limit, offset, userId, callback) {
+var getPubByPage = function (token, limit, offset, userId, typeId, callback) {
     ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
     var client = new Client();
     limit = ((limit) ? "?limit=" + limit : "");
     offset = ((offset) ? "&offset=" + offset : "");
     userId = ((userId) ? "&pubUserQr=" + userId : "");
-    var filter = limit + offset + userId;
+    typeId = ((typeId) ? "&pubTypeQr=" + typeId : "");
+    var filter = limit + offset + userId + typeId;
 
     var get;
 
@@ -78,6 +79,7 @@ var getPubByPage = function (token, limit, offset, userId, callback) {
         }
     }
 
+    console.log("restUrl.pub + filter", restUrl.pub + filter);
     get = client.get(restUrl.pub + filter, args, function (data, response) {
         if (data.next) {
             data.next = data.next.substring(data.next.indexOf("?"));
@@ -108,7 +110,7 @@ var postPub = function (body, mediaArray, token, callback) {
                 console.log('Error while making todo post request: ', err);
                 callback(httpResponse.statusCode, err);
             }
-            if (httpResponse.statusCode == 201) {
+            else if (httpResponse.statusCode == 201) {
                 console.log('Publication has been created successfully, Server responded with: ', JSON.parse(data));
                 callback(httpResponse.statusCode, JSON.parse(data));
             }
@@ -127,7 +129,9 @@ var postPub = function (body, mediaArray, token, callback) {
     form.append('location', body.location);
     form.append('address', body.address);
     form.append('is_trans', body.is_trans);
-    form.append('eersaClaimId', body.eersaClaimId);
+    if (body.eersaClaimId) {
+        form.append('eersa_claim_id', body.eersaClaimId);
+    }
 
     if (mediaArray) {
         for (var i = 0; i < mediaArray.length; i++) {

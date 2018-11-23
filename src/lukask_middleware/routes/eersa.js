@@ -23,8 +23,6 @@ var upload = multer({ storage: storage });
 router.post('/claim', upload.array('media_files[]', 5), (req, res, next) => {
     var token = req.session.key.token;
 
-    console.log("req.body", req.body);
-
     let claimData = {
         ncuenta: req.body.nCuenta,
         nmedidor: req.body.nMedidor,
@@ -42,32 +40,33 @@ router.post('/claim', upload.array('media_files[]', 5), (req, res, next) => {
     }
 
     eersaReclamoCli.insertReclamo(claimData, function (statusCode, data) {
-        console.log("Successfully calling of EERSA insert claim SOAP method: ", data);
         if (statusCode == 201) {
             let claimId = data;
-            req.body.eersaClaimId = claimId
+            req.body.eersaClaimId = claimId;
             postClaim.postClaim(req.body, req.files, token, req.io, function (pubData) {
-                if(pubData.isError) {
+                if (pubData.isError) {
                     return res.status(pubData.code).json({
-                      code: pubData.code,
-                      title: pubData.title,
-                      showFront: pubData.showMessage,
-                      error: pubData.data
+                        code: pubData.code,
+                        title: pubData.title,
+                        showFront: pubData.showMessage,
+                        error: pubData.data
                     });
-                  }
-              
-                  return res.status(pubData.code).json({
+                }
+
+                return res.status(pubData.code).json({
                     code: pubData.code,
                     title: pubData.title,
                     data: pubData.data
-                  });
+                });
             });
         }
-        return res.status(statusCode).json({
-            code: statusCode,
-            title: "An error has occured",
-            error: data
-        });
+        else {
+            return res.status(statusCode).json({
+                code: statusCode,
+                title: "An error has occured",
+                error: data
+            });
+        }
     });
 });
 
