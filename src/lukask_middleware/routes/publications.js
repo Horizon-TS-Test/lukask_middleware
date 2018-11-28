@@ -21,26 +21,6 @@ var storage = multer.diskStorage(
 var upload = multer({ storage: storage });
 ////////////////////////////////////////////////////////////
 
-/*router.get('/', function (req, res, next) {
-  let userId = 1;
-  let token = req.session.key.token;
-
-  publicationRestClient.getPubs(userId, token, function (responseCode, data) {
-    if (responseCode == 200) {
-      return res.status(responseCode).json({
-        code: responseCode,
-        title: "Successfully retrieving of publication data",
-        data: data
-      });
-    }
-    return res.status(responseCode).json({
-      code: responseCode,
-      title: "An error has occurred",
-      error: data
-    });
-  });
-});*/
-
 router.get('/filter/:city', function (req, res, next) {
   let cityFilter = req.params.city;
   let token = req.session.key.token;
