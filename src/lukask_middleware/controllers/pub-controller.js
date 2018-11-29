@@ -26,8 +26,7 @@ function defineMediaArray(files) {
                 mediaName: dest.substring(dest.indexOf("/", dest.indexOf("pubs/")))
             };
         }
-    }
-    else {
+    } else {
         mediaArray[mediaArray.length] = {
             mediaType: "IG",
             mediaPath: "/images/default.jpg",
@@ -60,7 +59,6 @@ function validatePub(location, latitude, longitude, pubType, token, callback) {
 
 var postClaim = function (body, files, token, io, callback) {
     let mediaArray = defineMediaArray(files);
-
     geoClient.getCity(body.latitude, body.longitude, (cityPromise) => {
         cityPromise.then((city) => {
             validatePub(city, body.latitude, body.longitude, body.type_publication, token, (isValid) => {

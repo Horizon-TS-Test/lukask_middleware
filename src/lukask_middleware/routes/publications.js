@@ -41,6 +41,7 @@ router.get('/filter/:city', function (req, res, next) {
   });
 });
 
+
 router.get('/', function (req, res, next) {
   let token = req.session.key.token;
   let limit = isNaN(parseInt(req.query.limit)) ? null : req.query.limit;
@@ -129,6 +130,29 @@ router.post('/transmission/:pubId', function (req, res, next) {
     });
   });
 });
+/**
+ * Funcion para obtener las quejas por parroquia
+ */
+
+router.get('/parish/:parish', function (req, res, next) {
+  let parishFilter = req.params.parish;
+  let token = req.session.key.token;
+
+  publicationRestClient.getPubFilterCity(token, parishFilter, function (responseCode, data) {
+    if (responseCode == 200) {
+      return res.status(responseCode).json({
+        code: responseCode,
+        title: "Successfully retrieving of publication data with filter",
+        data: data
+      });
+    }
+    return res.status(responseCode).json({
+      code: responseCode,
+      title: "An error has occurred",
+      error: data
+    });
+  });
+});
 
 /*router.get('/delete/:todoId', function (req, res, next) {
   let todoId = req.params.todoId;
@@ -149,5 +173,81 @@ router.post('/transmission/:pubId', function (req, res, next) {
     });
   });
 });*/
+/**
+ * Funciones de filtro
+ */
+
+router.get('/location/:parish', function (req, res, next) {
+  let parishFilter = req.params.parish;
+  let token = req.session.key.token;
+
+  publicationRestClient.getPubFilterParish(token, parishFilter, function (responseCode, data) {
+    if (responseCode == 200) {
+      return res.status(responseCode).json({
+        code: responseCode,
+        title: "Successfully retrieving of publication data with filter",
+        data: data
+      });
+    }
+    return res.status(responseCode).json({
+      code: responseCode,
+      title: "An error has occurred",
+      error: data
+    });
+  });
+});
+
+/**
+ * Funcion para llamar a publicaciones por fecha 
+ */
+router.get('/date/:fecha', function (req, res, next) {
+  let fechaFilter = req.params.fecha;
+  var fechaJSON=JSON.parse(fechaFilter);
+  let fechai = fechaJSON.fechai;
+  let fechaf = fechaJSON.fechaf;
+  let token = req.session.key.token;
+
+  publicationRestClient.getPubFilterDate(token,fechai, fechaf, function (responseCode, data) {
+    if (responseCode == 200) {
+      return res.status(responseCode).json({
+        code: responseCode,
+        title: "Successfully retrieving of publication data with filter",
+        data: data
+      });
+    }
+    return res.status(responseCode).json({
+      code: responseCode,
+      title: "An error has occurred",
+      error: data
+    });
+  });
+});
+
+/**
+ * Funcion para llamar a publicaciones por fecha 
+ */
+router.get('/dateParish/:fechaParish', function (req, res, next) {
+  let fechaFilter = req.params.fechaParish;
+  var fechaJSON=JSON.parse(fechaFilter);
+  let fechai = fechaJSON.fechai;
+  let fechaf = fechaJSON.fechaf;
+  let parishId = fechaJSON.parishId;
+  let token = req.session.key.token;
+
+  publicationRestClient.getPubFilterDateParish(token,fechai, fechaf, parishId, function (responseCode, data) {
+    if (responseCode == 200) {
+      return res.status(responseCode).json({
+        code: responseCode,
+        title: "Successfully retrieving of publication data with filter",
+        data: data
+      });
+    }
+    return res.status(responseCode).json({
+      code: responseCode,
+      title: "An error has occurred",
+      error: data
+    });
+  });
+});
 
 module.exports = router;

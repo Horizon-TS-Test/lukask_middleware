@@ -11,7 +11,8 @@ var getCanton = function (provincia_id, callback) {
             "Content-Type": "application/json"
         }
     }
-
+    console.log("Llamando desde canton client ");
+    console.log(restUrl.canton + "?province=" + provincia_id);
     var get = client.get(restUrl.canton + "?province=" + provincia_id, args, function (data, response) {
         console.log(data);
         callback(response.statusCode, data);

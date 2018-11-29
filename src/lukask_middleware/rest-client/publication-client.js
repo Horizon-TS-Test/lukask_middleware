@@ -269,6 +269,111 @@ var patchPub = function (body, files, token, callback) {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }*/
 
+/**
+ * Funciones de publicacion por ciudad
+ */
+
+/**
+ * Funcion que obtienen las quejas por ciudad 
+ * @param {*} token 
+ * @param {*} parishFilter 
+ * @param {*} callback 
+ */
+var getPubFilterParish = function (token, parishFilter, callback) {
+    ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
+    var client = new Client();
+    var filter = "?parish=" + parishFilter;
+    //GET METHOD:
+    var args = {
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Token " + token
+        }
+    }
+
+    var get = client.get(restUrl.pub + filter, args, function (data, response) {
+        callback(response.statusCode, data);
+    });
+
+    get.on("error", function (err) {
+        console.log(err);
+        callback(500, err.code);
+    });
+    ////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+}
+
+/**
+ * Funcion que obtienen las quejas por ciudad 
+ * @param {*} token 
+ * @param {*} fechai
+ * @param {*} fechaf
+ * @param {*} callback 
+ */
+var getPubFilterDate = function (token, fechai, fechaf, callback) {
+    console.log("fecha en el cliente de middleware...");
+    console.log(fechai);
+    console.log(fechaf);
+    ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
+    var client = new Client();
+    var filter = "?sinceDate=" + fechai + "&untilDate=" + fechaf;
+    //GET METHOD:
+    var args = {
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Token " + token
+        }
+    }
+
+    var get = client.get(restUrl.pub + filter, args, function (data, response) {
+        callback(response.statusCode, data);
+    });
+
+    get.on("error", function (err) {
+        console.log(err);
+        callback(500, err.code);
+    });
+    ////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+}
+
+
+/**
+ * Funcion que obtienen las quejas por ciudad y fecha 
+ * @param {*} token 
+ * @param {*} fechai
+ * @param {*} fechaf
+ * @param {*} parishId
+ * @param {*} callback 
+ */
+var getPubFilterDateParish = function (token, fechai, fechaf, parishId, callback) {
+    console.log("fecha en el cliente de middleware...");
+    console.log(fechai);
+    console.log(fechaf);
+    console.log(parishId);
+    ///////////////////////////////////////////NODE-REST-CLIENT///////////////////////////////////////
+    var client = new Client();
+    var filter = "?sinceDate=" + fechai + "&untilDate=" + fechaf + "&parish=" + parishId;
+    //GET METHOD:
+    var args = {
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Token " + token
+        }
+    }
+
+    var get = client.get(restUrl.pub + filter, args, function (data, response) {
+        callback(response.statusCode, data);
+    });
+
+    get.on("error", function (err) {
+        console.log(err);
+        callback(500, err.code);
+    });
+    ////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+}
+
 module.exports = {
     getPubs: getPubs,
     getPubFilter: getPubFilter,
@@ -276,6 +381,9 @@ module.exports = {
     postPub: postPub,
     getPub: getPub,
     patchPub: patchPub,
+    getPubFilterParish: getPubFilterParish,
+    getPubFilterDate: getPubFilterDate,
+    getPubFilterDateParish: getPubFilterDateParish,
     /*patchTodo: patchTodo,
     deleteTodo: deleteTodo*/
 }
