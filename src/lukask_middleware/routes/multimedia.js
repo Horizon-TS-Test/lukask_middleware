@@ -33,12 +33,13 @@ var  upload = multer({
             password : credentials.passwordFtp
         }
     })
-}).single('media_file');
+}).array('media_file[]', 5);
 
 router.post('/',function(req, res, next){
     try{
-
+        //console.log("req...", req);
         upload(req, res, function(err){
+            
             if(err){
                 return res.status(500).json({
                     code : 500,
@@ -47,19 +48,13 @@ router.post('/',function(req, res, next){
                 });
             }
             let token = req.session.key.token;
-            let dataFile = {
-                name : req.file.originalname.length > 49 ? req.file.originalname.substring(0, 48) : req.file.originalname,
-                path : req.file.path,
-                idPublication : req.body.idPublication,
-                formatMedia : 'VD'
-            }
-
-            mediaRestClient.postMedia(dataFile, token, (statusCode, data) =>{
+            
+            mediaRestClient.postMedia(req.body.id_publication, req.files, token, (statusCode, data) =>{
                 if(statusCode == 201){
                     /***
                      * consulta de datos soket
                      */
-                    var msg = {
+                   /* var msg = {
                         stream: "publication",
                         payload: {
                             action: "custom_update",
@@ -80,7 +75,7 @@ router.post('/',function(req, res, next){
                         }
                         })
                         ////
-                    }
+                    }*/
                     return res.status(statusCode).json({
                         code : statusCode,
                         title : 'The media has been successfully added',
@@ -93,6 +88,7 @@ router.post('/',function(req, res, next){
                     error : data
                 });
             });
+
         });
     }catch(error){
        console.log('<!ERROR AL EN EL PROCESO DE GUARDAR EL ARCHIVO>', error);
