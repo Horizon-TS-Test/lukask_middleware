@@ -37,7 +37,7 @@ function defineMediaArray(files) {
 }
 
 /*********************************************************************************
- * MÉTODO PARA VALIDAR QUE LA PUBLICACIÓN NO SE REPITA EN UN RANGO 10 METROS
+ * METODO PARA VALIDAR QUE LA PUBLICACIÓN NO SE REPITA EN UN RANGO 10 METROS
  ********************************************************************************/
 function validatePub(location, latitude, longitude, pubType, token, callback) {
     publicationRestClient.getPubFilter(token, location, function (responseCode, data) {

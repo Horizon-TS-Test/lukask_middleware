@@ -41,7 +41,7 @@ router.get('/:user_id', function (req, res, next) {
 });
 
 /**
- * MÉTODO PARA ACTUALIZAR LOS DATOS DE PERFIL
+ * METODO PARA ACTUALIZAR LOS DATOS DE PERFIL
  */
 router.post('/:user_id', upload.single('user_file'), function (req, res, next) {
   let token = req.session.key.token;

@@ -47,7 +47,7 @@ var provinciaRoute = require('./routes/province');
 var cantonRoute = require('./routes/canton');
 var parroquiaRoute = require('./routes/parroquia');
 var pushRoute = require('./routes/push');
-//var mediaRouter = require('./routes/multimedia');
+var mediaRouter = require('./routes/multimedia');
 var eersaRoute = require('./routes/eersa');
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -303,7 +303,7 @@ app.use(function (req, res, next) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.use('/eersa', eersaRoute);
-//app.use('/media', mediaRouter);
+app.use('/media', mediaRouter);
 app.use('/creacionPush', pushRoute);
 app.use('/push', pushRoute);
 app.use('/payment', paymentsRoute);

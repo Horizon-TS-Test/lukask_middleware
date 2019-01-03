@@ -7,7 +7,7 @@ var multer = require("multer");
 var upload = multer({ dest: 'tmp_uploads/' });
 
 /**
- * MÉTODO PARA REGISTRAR UN USUARIO
+ * METODO PARA REGISTRAR UN USUARIO
  */
 router.post('/', upload.single('user_file'), function (req, res, next) {
   let mediaProfile = "/images/default-profile.png";
